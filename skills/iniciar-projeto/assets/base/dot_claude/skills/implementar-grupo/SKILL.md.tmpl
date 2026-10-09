@@ -1,0 +1,50 @@
+---
+name: implementar-grupo
+description: Implementa um Grupo N de uma feature Fxx já especificada, seguindo o plan.md — dono, branch, Toca, contrato, testes com mutação, CI e handoff. Use quando pedirem para implementar um grupo ou a próxima parte de uma feature.
+---
+
+# implementar-grupo
+
+Implemente o Grupo N da Fxx conforme a spec aprovada. O `AGENTS.md` é a fonte das regras.
+
+## Antes de escrever código
+
+1. Leia `AGENTS.md`, `specs/constitution/` (mission, tech_stack, roadmap) e os três arquivos de `specs/features/Fxx-*/`.
+2. Confira no `plan.md` que o `Dono` do Grupo N é o agente (e o ambiente) desta sessão. Anote a linha `Integra` (sem ela, integra o Claude Code). Confirme a branch: a da feature, ou a `Branch` da linha do dono, criada a partir da branch da feature numa worktree fora do iCloud.
+3. Se o grupo consome um contrato, leia o validador de quem produz antes de usar o formato. Se define um contrato, escreva o formato de cada pedido e de cada resposta ao lado do código e crie o teste que passa os exemplos de quem consome pelo validador.
+4. Num grupo ⚠, confira conta, login e o estado do ambiente antes do primeiro comando ⚠. Se o recurso que o grupo cria já existe, pare e pergunte.
+
+## Durante o trabalho
+
+- Mexa só nos caminhos do `Toca` do grupo. Atualize spec e código juntos; um detalhe decidido na implementação entra no grupo do `plan.md` ("Decidido na implementação: …"). Marque os checkboxes do grupo no `plan.md` à medida que fecham.
+- Bug: primeiro o teste que o reproduz, visto falhando no código antigo; depois a correção.
+- Teste novo de contrato ou de dado: prove-o com uma mutação que o faz falhar, numa cópia temporária, e anote a mutação para o handoff. Desconfie de fixture em que o caminho errado dá a mesma resposta do certo.
+- Teste com motor substituto (banco em memória, mock do SDK) diz o próprio limite: ele não prova o ambiente real. Monte o mock com os objetos reais do SDK e, quando um smoke real acontecer, guarde a resposta como fixture.
+- Comando novo que toca ambiente real entra nas regras dos agentes neste mesmo grupo (regra "Comando ⚠ novo vira regra" do `AGENTS.md`).
+- Anote os identificadores (run, sessão, PR, deploy) assim que existirem.
+- Não escreva `start_here.md`, `specs/constitution/`, o "Registro dos grupos" nem o "Resultado" do `validation.md`, a menos que esta sessão seja a de quem integra, na branch da feature. Fora disso, mande o texto desses arquivos no handoff.
+- Num grupo ⚠, peça a aprovação de {{DONO}} antes de **cada** comando ⚠ e confira o resultado por leitura. Ao fim, pare e mostre o diff a {{DONO}} antes do handoff.
+
+## Fechar o grupo
+
+1. Rode `pytest -q`, `ruff check .` e os demais comandos de "Comandos" do `AGENTS.md` que o grupo tocou.
+2. Releia **Interfaces** e **Requisitos** do `requirements.md` e compare cada item com o diff. Nome de campo, rota, código de saída ou comportamento diferente é desvio: declare-o item por item. "Nenhum" só depois dessa releitura.
+3. Faça push do commit de código da branch do grupo (ou da branch da feature, se você integra e o grupo roda nela) e espere o CI verde, para ter um run verificável.
+4. Escreva a mensagem do handoff (formato abaixo, em português) num arquivo e confira com `python scripts/check_handoff.py --file <arquivo>`. Ela vai no último commit do grupo. Um handoff ruim já enviado se corrige com outro commit `handoff(...)` do mesmo grupo, sem push forçado: vale o último.
+5. Faça push e espere o CI verde também no commit final; informe o run a quem integra. Sem esse resultado, o grupo não está fechado. Se o ambiente impedir o push, diga isso sem inventar evidência.
+
+## Formato do handoff
+
+```text
+handoff(Fxx-gN): <resumo>
+
+Feito: …
+Contrato: <formatos definidos ou usados; validador conferido> (ou "não toca contrato")
+Testes: …
+Mutações: <teste> ← <mutação> (falhou)
+Evidência: <onde ficam no repo as provas citadas; o que você observou e o que foi relatado, com commit ou hash>
+CI: <run> verde
+Desvios da spec: <diff comparado com Interfaces e Requisitos, item por item> (ou "nenhum")
+```
+
+`Mutações` aceita "nenhuma" só com o motivo ("nenhuma, porque o grupo não cria teste de contrato nem de dado"), e `CI` cita o número ou o link de um run verde.

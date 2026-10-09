@@ -1,0 +1,32 @@
+---
+name: spec-feature
+description: Planeja uma feature do roadmap no formato spec-first — entrevista {{DONO}} e gera plan.md, requirements.md e validation.md em specs/features/Fxx-nome/, com grupos de tarefas, dono, Toca e ⚠. Use quando pedirem para planejar, especificar ou começar uma feature, antes de qualquer código.
+---
+
+# spec-feature
+
+Não escreva código nesta skill. O produto é a spec. Quem a roda é quem integra a feature (a branch da feature é dele){{#se codex}}: o Claude Code, salvo `Integra: Codex`{{/se}}.
+
+## Passos
+
+1. Leia `AGENTS.md`, `start_here.md` e `specs/constitution/` (mission, tech_stack, roadmap).
+2. Identifique a feature (ID e nome no roadmap). Se o pedido não está no roadmap ou contradiz a constituição, pare e sugira a skill `replan`. Confira se já existe uma spec dela (`specs/features/Fxx-*` na `main` e nas branches remotas): duas sessões escrevendo a mesma spec geram duplicata.
+3. Crie a branch `feature/Fxx-<nome-curto>` a partir da `main` atualizada. Mapeie, com data, o que o código e os dados têm hoje nos pontos que a feature toca.
+4. **Entreviste antes de escrever**, em rodadas curtas (3 a 5 perguntas), sem perguntar o que a constituição já responde:
+   - escopo: o que entra, o que fica para outra feature e o que não se promete;
+   - requisitos: o comportamento observável, inclusive o caso vazio (primeira execução) e o de erro;
+   - interfaces: quem consome o quê; para cada pedido e cada resposta entre partes, os campos, os tipos e os códigos de erro;
+   - validação: como {{DONO}} vai saber que ficou bom, no automático e no humano, com um caso concreto;
+   - riscos: segredos, custo, limites da plataforma, invariantes do `AGENTS.md` afetados, disco;
+   - se há tecnologia a escolher, proponha um grupo de spike antes do código; se há tela nova, mockups antes do código; se a feature escala algo novo (muitos itens iguais), uma fatia piloto ponta a ponta antes do resto.
+
+   Registre também o que você decidiu sem perguntar, seguindo a constituição, para que possa ser contestado.
+5. Crie `specs/features/Fxx-<nome-curto>/` a partir de `specs/features/_template/` e preencha os três arquivos. O template é somente leitura e a cópia herda isso: libere a escrita só nos arquivos novos (`chmod u+w`). Muito contexto de objetivo, público e restrições; pouco micromanagement de implementação.
+   - **Grupos:** implementáveis sozinhos e na ordem de valor, com o corte mínimo de cada um se o prazo apertar. Marque ⚠ só o grupo (ou o passo) que toca {{ALERTA}}. Antes de um ⚠ caro ou irreversível, um grupo de preparação sem código confere base, versões, suíte e uma fumaça; execução e aprovação de algo irreversível são dois ⚠ separados, com o diff mostrado entre eles. Nomeie na spec a ação irreversível que nenhum teste ou conferência pode disparar.
+   - **Dono e Toca:** proponha o dono de cada grupo{{#se codex}} (`Claude Code`; `Codex (cloud)` para grupo do Codex sem ⚠; `Codex` local para grupo ⚠ ou quando o cloud não servir){{/se}}, com `Branch` quando o grupo roda fora da branch da feature e `Toca` em todo grupo. Só grupos com `Toca` disjunto correm em paralelo, e grupos ⚠ nunca. O `Toca` de um grupo não inclui os arquivos de quem integra (`start_here.md`, constituição). O formato está no `AGENTS.md`.
+   - **Quem integra:** a linha `Integra: Claude Code` abaixo do título do `plan.md`{{#se codex}}; `Integra: Codex` só se {{DONO}} pedir{{/se}}.
+   - **Contrato:** se um grupo define um formato que outro consome, diga no plano qual é o grupo do contrato e liste em Interfaces o corpo de cada pedido e de cada resposta.
+   - **Validação:** itens humanos com caso concreto e o "Registro dos grupos" com uma linha por grupo (dono e branch); o resto da linha é de quem integra.
+6. Mostre um resumo de uma tela, com o dono de cada grupo, e peça correções. Aplique-as nos três arquivos de forma consistente.
+7. Rode `pytest -q` (o `tests/test_processo.py` confere o formato da spec). Commit só das specs, mais a emenda à constituição se a entrevista mudou alguma (com a Decisão datada): `spec(Fxx): plano, requisitos e validação`.
+8. Termine lembrando: conversa nova antes de implementar (`/clear` no Claude Code{{#se codex}}; `/new` no Codex CLI ou uma conversa nova no app{{/se}}) e o pedido "implemente o Grupo N da Fxx" ao dono do grupo, que segue a skill `implementar-grupo`.

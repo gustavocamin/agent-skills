@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "deny": [
+{{#se databricks}}
+      "Bash(databricks apps delete *)",
+      "Bash(databricks postgres delete-*)",
+{{/se}}
+      "Read(**/.env)",
+      "Read(~/.config/{{SLUG}}/**)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(git push origin --force *)",
+      "Bash(git push origin -f *)",
+      "Bash(git push origin main *)",
+      "Bash(git push origin HEAD:main *)",
+      "Bash(git push -u origin main *)",
+      "Bash(git add -f *)",
+      "Bash(git add --force *)"
+    ]
+  }
+}

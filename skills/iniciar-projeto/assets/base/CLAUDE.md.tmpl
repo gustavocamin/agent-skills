@@ -1,0 +1,12 @@
+@AGENTS.md
+
+## Só no Claude Code
+
+As regras do repo, os invariantes e o protocolo dos grupos estão no `AGENTS.md`, importado acima. Aqui fica só o que é do Claude Code.
+
+- **Subagentes em worktrees:** grupos sem ⚠ com `Toca` disjunto podem ir para subagentes em worktrees isoladas (`.claude/worktrees/`, fora do git), cada um fechando com handoff. Nenhum segredo entra no `.worktreeinclude`. O agente principal integra, confere o handoff, resolve conflitos e roda a suíte inteira. Os grupos ⚠ ficam no agente principal, em sequência.
+- **Permissões:** o `.claude/settings.json` (versionado) nega push forçado, push na `main` e `git add -f`{{#se databricks}}, e a exclusão de app e de recurso do Lakebase{{/se}}. Liberações pessoais (deploy, publicação) vão no `.claude/settings.local.json`, fora do git. As regras casam o texto do comando (um `git -C <pasta> push` ou o caminho absoluto do binário escapam): são barreira contra engano, não trava de segurança.
+{{#se codex}}
+- **Memória automática:** não é compartilhada com o Codex. O que precisa valer para os dois agentes vai para o `AGENTS.md` ou para a constituição.
+{{/se}}
+- **Conversa nova entre especificar e implementar** (`/clear`): o contexto passa a ser a spec, não o histórico da conversa.

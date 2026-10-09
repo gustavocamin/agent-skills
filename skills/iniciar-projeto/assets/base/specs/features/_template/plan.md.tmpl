@@ -1,0 +1,42 @@
+# Fxx — <nome da feature> · Plano
+
+Integra: Claude Code
+Branch: `feature/Fxx-<nome>`
+Roadmap: item Fxx em `specs/constitution/roadmap.md`
+
+## Objetivo
+
+<Uma ou duas frases: o que muda para quem usa quando esta feature estiver pronta.>
+
+## Contexto e restrições
+
+- **Por que agora:** <o que da constituição, do roadmap ou do último replan pede esta feature>
+- **O que existe hoje** (mapeado em <data>): <arquivos, funções, dados e testes que os requisitos tocam, inclusive a infraestrutura de teste que os grupos vão usar>
+- **Decisões da entrevista** (<data>): <uma linha por decisão>
+- **Restrições:** <invariantes, limites da plataforma, custo, credenciais, disco>
+- **Arquivos compartilhados:** <arquivo → grupo que o cria ou muda; depois do grupo do contrato, só quem integra mexe neles>
+
+## Grupos de tarefas
+
+Cada grupo é implementável sozinho e tem um dono (`Dono`), com `Branch` quando roda fora da branch da feature e `Toca` com os caminhos que mexe (protocolo no `AGENTS.md`). Grupos ⚠ tocam {{ALERTA}}: o dono para ao fim deles e mostra o diff. Grupos ⚠ nunca correm em paralelo, e o ⚠ fica só no grupo (ou no passo) que toca o ambiente real. Se um grupo define um contrato que outros consomem, ele vem primeiro, e os paralelos começam depois do push dele.
+
+**Ordem de valor, se o prazo apertar:** <a ordem dos grupos e o corte mínimo de cada um>
+
+### Grupo 1 — <nome>
+Dono: Claude Code · Toca: `<caminhos>`
+- [ ] Tarefa
+- [ ] Tarefa
+
+### Grupo 2 — <nome> ⚠
+Dono: {{#se codex}}<Claude Code | Codex>{{/se}}{{#se !codex}}Claude Code{{/se}} · Branch: `feature/Fxx-<nome>--g2-{{#se codex}}<claude|codex>{{/se}}{{#se !codex}}claude{{/se}}` · Toca: `<caminhos>`
+- [ ] Tarefa
+
+<!-- Detalhe resolvido durante a implementação entra no grupo, como "Decidido na implementação: …", junto com o código. -->
+
+## Fora do escopo desta feature
+
+- <o que fica para depois, e em qual feature; o que não se promete, e por quê>
+
+## Riscos
+
+- <risco> → <mitigação>

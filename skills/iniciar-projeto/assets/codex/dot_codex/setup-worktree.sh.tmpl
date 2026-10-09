@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Setup de uma worktree nova do Codex. No app, o ambiente local roda "bash .codex/setup-worktree.sh";
+# no CLI, rode à mão depois de criar a worktree. Cria a venv da própria worktree e instala as
+# dependências. Nunca copia .env nem outro segredo: testes e lint não precisam deles.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+# No checkout principal o git-dir é o próprio .git; numa worktree, é .git/worktrees/<nome>.
+git_dir=$(git rev-parse --path-format=absolute --git-dir)
+common_dir=$(git rev-parse --path-format=absolute --git-common-dir)
+if [ "$git_dir" = "$common_dir" ]; then
+  echo "setup: checkout principal; nada a fazer (o script é para worktree nova)"
+  exit 0
+fi
+
+# A venv da worktree é uma pasta dela: uma venv do checkout principal importaria o código de lá.
+if [ -L .venv ]; then
+  echo "setup: .venv é um link; a worktree precisa da própria venv (remova o link e rode de novo)" >&2
+  exit 1
+fi
+
+python_bin=$(command -v python{{PYTHON}} || command -v python3)
+free_gb=$("$python_bin" -c "import shutil; print(int(shutil.disk_usage('.').free / 1024**3))")
+if [ "$free_gb" -lt 5 ]; then
+  echo "setup: só ${free_gb} GB livres; com menos de 5 GB não se abre worktree nova" >&2
+  exit 1
+fi
+
+if [ ! -x .venv/bin/python ]; then
+  "$python_bin" -m venv .venv
+fi
+.venv/bin/pip install --quiet --upgrade pip
+.venv/bin/pip install --quiet -e ".[dev]"
+
+if [ -f app/package-lock.json ]; then
+  (cd app && npm ci --no-audit --no-fund)
+fi
+
+echo "setup: pronto (venv em .venv, sem .env)"

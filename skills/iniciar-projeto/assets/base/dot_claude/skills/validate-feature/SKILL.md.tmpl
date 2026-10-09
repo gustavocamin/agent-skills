@@ -1,0 +1,24 @@
+---
+name: validate-feature
+description: Valida uma feature implementada contra o validation.md dela — testes, mutações, sincronia spec↔código, invariantes, revisão independente numa sessão nova e checklist humano — e prepara o fechamento (Resultado, roadmap, PR). Use quando disserem que terminaram de implementar uma feature ou pedirem para validar ou fechar a Fxx.
+---
+
+# validate-feature
+
+Quem roda esta skill é quem integra a feature: o agente da linha `Integra` do `plan.md` (o Claude Code, se ela faltar).
+
+## Passos
+
+1. Leia `AGENTS.md` e `specs/features/Fxx-*/` (plan, requirements, validation).
+2. **Automática:** rode `pytest -q`, `ruff check .` e os demais comandos de "Comandos". Testes de integração (`-m integration`) só se {{DONO}} pedir. Para cada teste novo de contrato ou de dado, mostre uma mutação (numa cópia ou worktree temporária, nunca no repo) que o faz falhar e registre-a em "Mutações".
+3. **Sincronia spec ↔ código:** preencha o mapa requisito → implementação → teste. Liste os requisitos sem implementação ou sem teste (o que só tem verificação humana, diga) e o código que não corresponde a nenhum requisito. Confira o "Registro dos grupos": uma linha por grupo, com handoff, CI, integração e "Handoff conferido"; nos grupos que você não fez, desvios refeitos, contrato conferido e mutação própria.
+4. **Invariantes:** verifique os do `AGENTS.md` que a feature toca, e que nenhum segredo nem identificador pessoal entrou (o `tests/test_processo.py` procura os tokens comuns; confira à mão emails e hosts nos registros).
+5. **Revisão independente** (obrigatória em toda feature): abra uma sessão nova{{#se codex}} do agente que não integra (o Codex quando o Claude Code integra, e vice-versa){{/se}}{{#se !codex}} do Claude Code, ou um subagente sem o histórico,{{/se}} na branch da feature e sem o histórico da conversa, e cole o prompt abaixo, trocando `Fxx` e a branch.{{#se codex}} Se o outro agente não estiver disponível, use um subagente ou uma sessão nova de quem integra e registre o motivo.{{/se}} Reproduza cada achado antes de corrigir, corrija spec e código juntos e registre a revisão no `validation.md`.
+
+   > Você é o revisor independente da feature Fxx deste repo. Leia só: `specs/constitution/` (mission, tech_stack, roadmap), `AGENTS.md`, `specs/features/Fxx-*/` e o diff `git diff main...feature/Fxx-nome`. Não use outro contexto. Reporte: (1) divergências entre a spec e o diff; (2) bugs, cada um com um cenário concreto (entrada ou estado → resultado errado); (3) testes fracos: para cada teste novo de contrato ou de dado, tente uma mutação do código ou do dado numa cópia temporária (`git archive HEAD | tar -x -C <pasta temporária>` ou uma worktree descartável) e diga se o teste falha; (4) documentos que ficaram velhos (constituição, specs de outras features, `start_here.md`); (5) confira em especial estes pontos de maior risco: <liste>. Não altere o repo, não faça commit nem push e não rode comando que toque ambiente real. Termine com a lista numerada de achados, do mais grave ao menos grave, e com o que você conferiu e ficou provado sem bug.
+6. Apresente um relatório curto: passou, falhou, gaps. Cada resultado diz se foi observado nesta sessão ou relatado por {{DONO}} ou por outro agente, com commit ou hash, e as provas ficam no `validation.md`. Gaps se corrigem pela conversa, spec e código juntos.
+7. Prepare a revisão humana: uma tabela com cada item "Humana", o que você conferiu e um veredito proposto, mais as dúvidas abertas com uma resposta proposta. Deixe os itens para {{DONO}} marcar. Se {{DONO}} confirmar na conversa, o registro diz que é relato e cita a confirmação; aceite manual vale só para o commit ou o hash conferido, e mudar o artefato reabre o item.
+8. A feature fecha com tudo marcado. Um item que vai ficar para depois só sai do checklist por decisão explícita de {{DONO}}, registrada no `validation.md`, e vira pendência com dono e data. Campo "para completar depois" não é fechamento.
+9. Com tudo marcado: preencha "Resultado", "Para o replan" e "Limites conhecidos", atualize o status da feature no `roadmap.md` e o `start_here.md`, faça commit `feat(Fxx): <resumo>` com specs e código juntos e abra o PR da feature para a `main`, um por feature. O merge acontece com o ok de {{DONO}} e o CI verde; correção achada depois do merge vai num PR `fix(Fxx)` próprio, numa branch `fix/Fxx-<curto>`.
+10. Depois do merge, confira a `main`: CI verde e, se a feature muda algo publicado ou implantado, o passo de publicação do `tech_stack.md` e a conferência do artefato implantado. Registre os dois.
+11. Lembre de rodar a skill `replan` antes da próxima feature.

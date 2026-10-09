@@ -1,0 +1,255 @@
+"""Contrato do handoff entre o dono de um grupo, quem integra e o CI.
+
+Regras em AGENTS.md, "Fechar um grupo".
+"""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+SPEC = importlib.util.spec_from_file_location("check_handoff", ROOT / "scripts/check_handoff.py")
+assert SPEC and SPEC.loader
+check_handoff = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(check_handoff)
+VALID = """handoff(F01-g1): conferir o handoff no CI
+
+Feito: conferidor e testes
+Contrato: não toca contrato
+Testes: pytest -q passou
+Mutações: test_handoff ← removi validação (falhou)
+Evidência: tests/test_handoff.py; observado em abc123
+CI: run 123456 verde
+Desvios da spec: nenhum
+"""
+BODY = VALID.split("\n\n", 1)[1]
+
+
+def run(*args: str, cwd: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(args, cwd=cwd, capture_output=True, text=True, check=False)
+
+
+def git(repo: Path, *args: str) -> str:
+    result = run("git", *args, cwd=repo)
+    assert result.returncode == 0, result.stderr
+    return result.stdout.strip()
+
+
+def commit(repo: Path, subject: str, body: str = "") -> str:
+    (repo / "sample").write_text(subject + body, encoding="utf-8")
+    git(repo, "add", "sample")
+    git(repo, "commit", "-q", "-m", subject, "-m", body)
+    return git(repo, "rev-parse", "HEAD")
+
+
+@pytest.fixture
+def repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    git(tmp_path, "init", "-q", "-b", "main")
+    git(tmp_path, "config", "user.email", "test@example.com")
+    git(tmp_path, "config", "user.name", "Test")
+    git(tmp_path, "config", "commit.gpgsign", "false")
+    commit(tmp_path, "base")
+    git(tmp_path, "remote", "add", "origin", str(tmp_path))
+    git(tmp_path, "update-ref", "refs/remotes/origin/main", "HEAD")
+    monkeypatch.chdir(tmp_path)
+    return tmp_path
+
+
+def test_valid_message_with_short_summary() -> None:
+    assert check_handoff.check_message(VALID) == []
+    assert check_handoff.check_message(VALID.replace("conferir o handoff no CI", "x", 1)) == []
+
+
+def test_multiline_fields_trailers_and_reasoned_none() -> None:
+    message = (
+        VALID.replace(
+            "Mutações: test_handoff ← removi validação (falhou)",
+            "Mutações: test_handoff ← removi validação\n(falhou)",
+        )
+        + "Co-Authored-By: Outra Pessoa <outra@example.com>\n"
+    )
+    assert check_handoff.check_message(message) == []
+    reasoned = VALID.replace(
+        "Mutações: test_handoff ← removi validação (falhou)",
+        "Mutações: nenhuma porque o grupo não tem teste de contrato nem de dado",
+    )
+    assert check_handoff.check_message(reasoned) == []
+
+
+@pytest.mark.parametrize("field", check_handoff.FIELDS)
+@pytest.mark.parametrize("kind", ["ausente", "vazio"])
+def test_each_field_is_required(field: str, kind: str) -> None:
+    line = next(line for line in VALID.splitlines() if line.startswith(field + ":"))
+    broken = VALID.replace(line + "\n", "" if kind == "ausente" else field + ":  \n")
+    assert any(
+        field in problem and kind in problem for problem in check_handoff.check_message(broken)
+    )
+
+
+@pytest.mark.parametrize(
+    ("message", "problem"),
+    [
+        (
+            VALID.replace("handoff(F01-g1): conferir o handoff no CI", "handoff(F01-g1): "),
+            "assunto",
+        ),
+        (
+            VALID.replace("handoff(F01-g1): conferir o handoff no CI", "handoff F01-g1: conferir"),
+            "assunto",
+        ),
+        (VALID.replace("←", "->"), "Mutações"),
+        (VALID.replace("(falhou)", "(passou)"), "Mutações"),
+        (VALID.replace("← removi validação (falhou)", "nenhuma"), "Mutações"),
+        (
+            VALID.replace("← removi validação (falhou)", "← removi validação, nenhuma falhou"),
+            "Mutações",
+        ),
+        (VALID.replace("CI: run 123456 verde", "CI: verde"), "CI"),
+        (VALID.replace("CI: run 123456 verde", "CI: 351 testes passaram"), "CI"),
+        (VALID.replace("Feito: conferidor e testes", "Feito: um\nFeito: dois"), "Feito"),
+        (VALID.replace("handoff(F01-g1)", "handoff(F1-g1)"), "assunto"),
+        (
+            VALID.replace(
+                "Mutações: test_handoff ← removi validação (falhou)", "Mutações: nenhuma falhou"
+            ),
+            "Mutações",
+        ),
+        (VALID.replace("CI: run 123456 verde", "CI: run 123456 vermelho"), "CI"),
+    ],
+)
+def test_invalid_format(message: str, problem: str) -> None:
+    assert any(problem in item for item in check_handoff.check_message(message))
+
+
+def test_continuation_line_with_colon_is_not_a_trailer() -> None:
+    message = VALID.replace(
+        "Feito: conferidor e testes", "Feito: conferidor e testes\npré-voo: conferido"
+    )
+    assert check_handoff.check_message(message) == []
+
+
+@pytest.mark.parametrize(
+    "subject", ["Handoff(F01-g1): resumo", "handoff (F01-g1): resumo", "handoff F01-g1: resumo"]
+)
+def test_malformed_subject_in_interval_is_checked_not_skipped(repo: Path, subject: str) -> None:
+    base = git(repo, "rev-parse", "HEAD")
+    commit(repo, subject, BODY)
+    assert check_handoff.check_interval(base, "HEAD") == (1, 1)
+
+
+def test_exit_codes_of_the_cli(repo: Path, tmp_path: Path) -> None:
+    script = str(ROOT / "scripts/check_handoff.py")
+    base = git(repo, "rev-parse", "HEAD")
+    commit(repo, "handoff(F01-g1): ruim", "Feito: só isto")
+    assert run(sys.executable, script, base, "HEAD", cwd=repo).returncode == 1
+    ruim = tmp_path / "ruim.txt"
+    ruim.write_text("handoff(F01-g1): ruim\n\nFeito: só isto\n", encoding="utf-8")
+    assert run(sys.executable, script, "--file", str(ruim), cwd=repo).returncode == 1
+    assert run(sys.executable, script, "nao-existe", "HEAD", cwd=repo).returncode == 2
+    assert run(sys.executable, script, cwd=repo).returncode == 2
+
+
+@pytest.mark.parametrize("trailer", ["Claude-Session: 123", "Revisão-Por: Alguém"])
+def test_trailer_stops_field_value(trailer: str) -> None:
+    broken = VALID.replace("Desvios da spec: nenhum", f"Desvios da spec:\n{trailer}\ntexto")
+    assert "Desvios da spec: campo vazio" in check_handoff.check_message(broken)
+
+
+def test_malformed_subject_is_replaced_by_next_handoff_of_group(repo: Path) -> None:
+    base = git(repo, "rev-parse", "HEAD")
+    commit(repo, "handoff(F01-g1: resumo ruim", BODY)
+    commit(repo, "handoff(F01-g1): corrigido", BODY)
+    assert check_handoff.check_interval(base, "HEAD") == (1, 0)
+
+
+def test_last_handoff_wins_and_outside_interval_is_ignored(
+    repo: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    old = commit(repo, "handoff(F01-g1): antigo", "Feito: só isto")
+    base = git(repo, "rev-parse", "HEAD")
+    commit(repo, "handoff(F01-g1): ruim", "Feito: só isto")
+    commit(repo, "handoff(F01-g1): conferir o handoff no CI", BODY)
+    commit(repo, "feat: outro commit")
+    assert check_handoff.check_interval(base, "HEAD") == (1, 0)
+    assert "1 handoff(s) conferido(s), 0 com problema" in capsys.readouterr().out
+    assert check_handoff.check_interval(old, base) == (0, 0)
+
+
+def test_interval_reports_sha_subject_and_field(
+    repo: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    base = git(repo, "rev-parse", "HEAD")
+    sha = commit(repo, "handoff(F01-g1): ruim", "Feito: só isto")
+    assert check_handoff.check_interval(base, sha) == (1, 1)
+    assert f"{sha[:7]} handoff(F01-g1): ruim: Contrato: campo ausente" in capsys.readouterr().out
+
+
+def test_merge_with_handoff_subject_is_ignored(repo: Path) -> None:
+    base = git(repo, "rev-parse", "HEAD")
+    git(repo, "switch", "-q", "-c", "other")
+    commit(repo, "feat: mudança paralela")
+    git(repo, "switch", "-q", "main")
+    commit(repo, "feat: mudança local")
+    git(
+        repo,
+        "merge",
+        "-q",
+        "--no-ff",
+        "-s",
+        "ours",
+        "-m",
+        "handoff(F01-g1): merge não é handoff",
+        "other",
+    )
+    assert check_handoff.check_interval(base, "HEAD") == (0, 0)
+
+
+@pytest.mark.parametrize("scenario", ["new_branch", "force_push", "normal_push", "pull_request"])
+def test_ci_interval(
+    repo: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, scenario: str
+) -> None:
+    main = git(repo, "rev-parse", "HEAD")
+    git(repo, "switch", "-q", "-c", "group")
+    head = commit(repo, "handoff(F01-g1): conferir o handoff no CI", BODY)
+    if scenario == "new_branch":
+        before, name = "0" * 40, "push"
+    elif scenario == "force_push":
+        git(repo, "switch", "-q", "main")
+        before = commit(repo, "feat: ramo divergente")
+        git(repo, "switch", "-q", "group")
+        name = "push"
+    elif scenario == "normal_push":
+        before, name = main, "push"
+    else:
+        before, name = main, "pull_request"
+    event = (
+        {"pull_request": {"base": {"sha": before}, "head": {"sha": head}}}
+        if name == "pull_request"
+        else {"before": before, "after": head}
+    )
+    path = tmp_path / "event.json"
+    path.write_text(json.dumps(event), encoding="utf-8")
+    monkeypatch.setenv("GITHUB_EVENT_NAME", name)
+    monkeypatch.setenv("GITHUB_EVENT_PATH", str(path))
+    expected_base = "origin/main" if scenario in {"new_branch", "force_push"} else before
+    assert check_handoff.interval_from_ci() == (expected_base, head)
+    assert check_handoff.check_interval(*check_handoff.interval_from_ci()) == (1, 0)
+
+
+def test_file_cli_and_empty_interval(repo: Path, tmp_path: Path) -> None:
+    path = tmp_path / "message.txt"
+    path.write_text(VALID, encoding="utf-8")
+    script = str(ROOT / "scripts/check_handoff.py")
+    result = run(sys.executable, script, "--file", str(path), cwd=repo)
+    assert result.returncode == 0
+    assert "1 handoff(s) conferido(s), 0 com problema" in result.stdout
+    sha = git(repo, "rev-parse", "HEAD")
+    result = run(sys.executable, script, sha, sha, cwd=repo)
+    assert result.returncode == 0
+    assert "0 handoff(s) conferido(s), 0 com problema" in result.stdout

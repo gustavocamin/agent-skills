@@ -1,0 +1,75 @@
+# Tech stack
+
+> Rascunho semente de {{DATA_BR}}. As práticas do fluxo já valem; o que é do produto está marcado [A CONFIRMAR] e se fecha na F00.
+
+## Produto
+
+- **Linguagem e runtime:** [A CONFIRMAR] A stack do produto. O esqueleto usa Python {{PYTHON}} só para o processo (testes das regras e conferidor de handoff); isso não decide a stack do produto.
+- **Onde roda:** [A CONFIRMAR]
+- **Dados e estado:** [A CONFIRMAR] O que é versionado no git, o que vive em banco e quem escreve cada parte. Um dado tem uma fonte só; o resto é cópia publicada a partir dela.
+- **Limites da plataforma:** [A CONFIRMAR] Cotas, planos gratuitos e o que para sozinho, conferidos na doc com data. Viram requisito não funcional das features que os tocam.
+
+## Desenvolvimento (este repo)
+
+- **Agentes de código:** Claude Code{{#se codex}} e Codex (app, CLI e cloud){{/se}}, no fluxo spec-first. As regras ficam no `AGENTS.md`, a fonte única, e o `CLAUDE.md` o importa. Skills em `.claude/skills/`{{#se codex}}; o Codex as acha pelo link `.agents/skills`{{/se}}.
+- **Ambiente:** `pip` + `venv` (`pip install -e ".[dev]"`). A pasta do repo fica fora do iCloud: nome terminado em `.nosync` ou fora de `Documents` e `Desktop`. O iCloud esvazia `.git`, venv e `node_modules` quando o disco aperta, e a marca "Manter baixado" não segura. A cópia do repo é o GitHub; o que só existe localmente (`.env`, evidências pessoais) fica sem backup.
+- **Disco:** cada worktree com dependências ocupa espaço (com um app Node, cerca de 1 GB). Grupos em paralelo só com folga (referência: 15 GB livres); abaixo disso, grupos em sequência{{#se codex}} ou no Codex cloud{{/se}}.
+- **Paralelização:** grupos sem ⚠ com `Toca` disjunto podem ir para subagentes em worktrees{{#se codex}} ou para o Codex{{/se}}; quem integra resolve os conflitos e roda a suíte inteira. Grupos ⚠ em sequência, com dono explícito.
+- **Mudança em massa primeiro:** formatação ou renomeação que toca muitos arquivos entra sozinha, antes de grupos em paralelo, porque conflitaria com todos eles.
+- **Qualidade:** `pytest`, `ruff` e o conferidor de handoff (`scripts/check_handoff.py`) no CI. O CI roda os mesmos checks que o deploy exige: um check que só o deploy roda deixa o CI verde e o deploy vermelho. [A CONFIRMAR] O que mais o produto pede (typecheck, lint de front, validação de schema).
+- **Docs atuais no contexto:** [A CONFIRMAR] Skills oficiais da plataforma e um MCP de docs, para não citar API de memória.
+{{#se databricks}}
+
+## Plataforma Databricks
+
+- Perfil do CLI sempre explícito (`--profile <perfil>`); o agente nunca escolhe o perfil sozinho. As skills oficiais (`databricks aitools install`) trazem a doc atual da plataforma.
+- Limites conferidos na doc, com data (cotas, apps por conta, warehouse, o que para sozinho), e todo job leva timeout. [A CONFIRMAR] Os limites do workspace deste projeto.
+- Databricks Apps, se houver: `databricks apps validate` antes de fechar grupo que mexe no app, porque ele roda o lint que barra o deploy (e o CI roda o mesmo lint); o app para 24 h depois de iniciado e é religado antes de deploy ou conferência; o bundle pode converter arquivo estático (um `.ipynb` vira objeto do workspace), então o artefato implantado se confere por GET autenticado (status, tipo, bytes, SHA-256), e não por um 200 que pode ser o fallback do SPA.
+- Banco e Unity Catalog: invariantes garantidos por grants mínimos e conferidos no próprio banco depois de cada DDL ou deploy; DDL idempotente; teste real num branch, schema ou recurso descartável com validade, nunca deixando dado de teste em produção.
+- Conteúdo publicado do git para um banco, se houver: publicação idempotente que grava o commit; ids publicados são contrato estável; um `--check` só de leitura depois de cada merge diz se o banco está atrás da `main`.
+{{/se}}
+{{#se agente}}
+
+## Agente de IA (o produto)
+
+Valem na medida do que o agente faz: guarda pós-run, merge e commit se aplicam ao agente que escreve no repo ou age num sistema externo.
+
+- **Defesa em camadas:** prompt → trava na própria tool → guarda determinística depois do run, fora do alcance do agente → credencial mínima → permissão na plataforma. Com shell no sandbox, prompt e tool não bastam: quem decide é a guarda. Cada camada heurística tem a lista dos limites conhecidos e um corpus real contra falso positivo; quando uma lista de bloqueio é furada seguidamente, troque-a por uma lista do que é permitido.
+- **Acesso externo:** antes da feature que o libera, uma sonda única, versionada e só de leitura; qualquer outro uso reprova o run. A credencial entra só para o host exato, e o token do agente não tem permissão de merge.
+- **Avaliação:** critério de rubrica se confere no artefato, não no relato do agente (um avaliador LLM aceita relato que contradiz a saída do comando). A checagem que o agente roda antes do commit é o mesmo código que a guarda reaproveita.
+- **Versões:** a lição de cada revisão humana vira versão nova do agente, registrada com o que mudou, e o comportamento bom que o agente teve sozinho é promovido ao prompt. Prompt e manifest de um agente implantado só mudam na feature que valida a versão nova. O agente nunca edita as próprias instruções, e artefato aprovado é imutável: mudança de decisão vai num artefato novo.
+- **Prompt:** curto e estável, manda ler do repo em vez de copiar e limita a lista de leitura. O custo vem do contexto relido a cada passo, não da escrita.
+- **Custo:** o teto por sessão é hipótese, revista com o custo real de cada run; vigie sessão parada no teto sem eventos; limite os runs completos por artefato e registre o custo de cada um.
+- **Runs reais:** spike curto e com teto baixo antes de adotar um runtime (confira antes créditos e pré-requisitos da conta); o processo longo sobrevive à queda do cliente e retoma sem perder evento; cada run registra sessão, versão, desfecho, duração, custo, guarda e commits. A aprovação humana fica presa ao commit que a guarda conferiu. Autonomia maior (merge sem humano) só depois de evals.
+- **Tool que escreve sozinha** (commit, gravação) mexe só no próprio caminho, recusa estado sujo, desfaz o que fez se falhar e nunca grava vazio; invariante do agente vira trava no código da tool, testada nos dois sentidos.
+- **Recusa do modelo** por classificador de segurança é tratada como erro de sessão, com modelo de reserva.
+{{/se}}
+
+## Segredos
+
+- Nenhum segredo versionado. `.env` local no `.gitignore`; o `.env.example` documenta só os nomes. `tests/test_processo.py` procura os formatos de token mais comuns.
+- Segredos de ferramentas locais em `~/.config/{{SLUG}}/`, fora do repo e do iCloud, com `chmod 600`. Prefira login por perfil (OAuth, token curto) a chave fixa.
+- Credencial dada a um agente remoto (cloud, sandbox) é dedicada, com o menor escopo possível, validade curta e data de revogação registrada aqui.
+- Nenhum identificador pessoal (email, host, id de conta) em arquivo versionado: nos registros, use o nome do perfil, não o email. Erro de SDK que imprime host passa por um filtro antes de ir para a tela.
+{{#se databricks}}
+- Databricks: perfil do CLI (`databricks auth login --profile <perfil>`), sempre com `--profile` explícito; o agente nunca escolhe o perfil sozinho.
+{{/se}}
+- [A CONFIRMAR] Segredos do produto e onde ficam.
+
+## Testes e validação (política)
+
+- **Pronto** = critérios do `validation.md` da feature passando + CI verde.
+- **Sem rede por padrão:** dependência externa entra no teste simulada (fake ou mock), com regra de negócio em funções puras. O teste contra o ambiente real é marcado `@pytest.mark.integration` e roda só quando pedido. Feature que toca ambiente real exige um run de integração registrado no `validation.md`, de preferência num ambiente descartável (branch, schema ou recurso temporário), e não deixa dado de teste para trás.
+- **Mutação:** todo teste novo de contrato ou de dado é provado por uma mutação que o faz falhar, numa cópia; a prova vai para o `validation.md`. Quem integra repete, com mutação própria, nos grupos que não fez.
+- **Contrato entre partes:** quando uma parte consome o formato de outra (cliente e servidor, publicador e leitor), um teste passa os exemplos de quem consome pelo validador de quem produz. Contrato sem teste se quebra em silêncio.
+- **Revisão independente** em toda feature, numa sessão nova sem histórico, com só a constituição, a spec e o diff ({{#se codex}}pelo agente que não integra{{/se}}{{#se !codex}}subagente ou sessão nova{{/se}}). Os achados são reproduzidos antes da correção, com spec e código juntos.
+- **Interface com usuário:** tela nova ou alterada exige teste de componente; a conferência no navegador complementa, não substitui. Design de tela se decide por mockup aprovado antes do código.
+- **Spike antes de escolher:** tecnologia, provedor ou modelo se escolhe por um spike curto, sem código de produção, que mede os candidatos com a entrada real; os achados mudam a spec.
+- **Medir antes de mexer em limite:** teste instável ou lento se corrige pela causa medida; um limite de tempo só sobe com a medição que o justifica, registrada.
+
+## Operação (⚠)
+
+- Comandos que tocam {{ALERTA}} rodam só em grupo ⚠, com a aprovação de {{DONO}}. O resultado é conferido por leitura (banco, logs, API), não presumido. O que exige o login de {{DONO}} (tela implantada) fica como item humano.
+- Antes de criar recurso num ambiente real, confira a conta e o login, e pare para perguntar se o recurso já existe.
+- Cada comando ⚠ entra nas regras dos agentes no grupo que o cria: exclusão como `deny` no `.claude/settings.json`{{#se codex}} e `forbidden` em `.codex/rules/`{{/se}}; o resto como `ask`{{#se codex}} e `prompt`{{/se}}. Até lá, o ⚠ vale só como regra escrita.{{#se databricks}} Para o Databricks isso já vem: exclusão de app e de recurso do Lakebase negada aos agentes.{{/se}} As regras casam o texto do comando: são uma barreira contra engano, não uma trava de segurança.
+- [A CONFIRMAR] O que é publicação ou deploy neste projeto, e quem roda.

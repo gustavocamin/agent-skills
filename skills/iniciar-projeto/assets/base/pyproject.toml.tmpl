@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "{{SLUG}}"
+version = "0.0.1"
+requires-python = ">={{PYTHON}}"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+# Sem pacote até a F00 ou a F01 decidir a estrutura do código. Quando o primeiro pacote nascer, troque por
+# [tool.setuptools.packages.find] com include = ["<pacote>*"].
+[tool.setuptools]
+packages = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: toca um ambiente real (nuvem, banco, workspace); roda só quando pedido"]
+addopts = "-m 'not integration'"
+
+[tool.ruff]
+line-length = 100
+target-version = "{{PYTHON_ALVO}}"

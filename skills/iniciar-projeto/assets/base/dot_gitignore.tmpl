@@ -1,0 +1,29 @@
+# Segredos: nunca versionados (o .env.example documenta só os nomes)
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+.venv.nosync/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Node, se o projeto ganhar um app
+node_modules/
+
+# Claude Code: permissões pessoais e worktrees de subagentes
+.claude/settings.local.json
+.claude/worktrees/
+
+# Sistema
+.DS_Store
+{{#se databricks}}
+
+# Databricks: credencial local do CLI e estado de bundle
+.databrickscfg
+.databricks/
+{{/se}}

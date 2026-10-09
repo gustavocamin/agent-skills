@@ -1,0 +1,38 @@
+# Configuração do Codex para este repo. Só carrega com o projeto marcado como confiável.
+# Sem modelo fixo: o modelo fica na configuração do usuário (~/.codex/config.toml).
+# Sem segredo: as credenciais ficam fora do repo (AGENTS.md, Invariantes).
+# O perfil de permissões não se combina com sandbox_mode: ele faz o papel do workspace-write
+# (escrita no workspace), nega a leitura dos arquivos de segredo e só abre a rede para os
+# registros de pacote, para o setup da worktree instalar as dependências.
+
+approval_policy = "on-request"
+default_permissions = "{{SLUG}}"
+
+# Sem o proxy, a lista de domínios do perfil não é aplicada.
+[features]
+network_proxy = true
+
+[permissions.{{SLUG}}]
+description = "Escrita no workspace, rede só para os registros de pacote e sem leitura dos arquivos de segredo."
+extends = ":workspace"
+
+[permissions.{{SLUG}}.filesystem]
+"~/.config/{{SLUG}}" = "deny"
+"~/.config/gh" = "deny"
+"~/.codex/auth.json" = "deny"
+{{#se databricks}}
+"~/.databrickscfg" = "deny"
+"~/.databricks" = "deny"
+{{/se}}
+
+[permissions.{{SLUG}}.filesystem.":workspace_roots"]
+".env" = "deny"
+
+[permissions.{{SLUG}}.network]
+enabled = true
+
+# pip (pyproject.toml) e npm (se o projeto ganhar um app).
+[permissions.{{SLUG}}.network.domains]
+"pypi.org" = "allow"
+"files.pythonhosted.org" = "allow"
+"registry.npmjs.org" = "allow"

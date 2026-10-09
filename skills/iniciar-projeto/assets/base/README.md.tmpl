@@ -1,0 +1,35 @@
+# {{PROJETO}}
+
+[A CONFIRMAR] <Uma frase: o que o projeto é e para quem.>
+
+Construído no fluxo **spec-first** com agentes de código (Claude Code{{#se codex}} e Codex{{/se}}): a spec é o cérebro, o agente é o músculo. As regras estão no `AGENTS.md`; o `CLAUDE.md` o importa e acrescenta o que é só do Claude Code. O panorama do dia está no `start_here.md`.
+
+## O ciclo
+
+| Fase | Você diz ao agente | Skill | Resultado |
+|---|---|---|---|
+| 0. Constituição (uma vez) | "vamos fechar a constituição" | `constitution-interview` | mission, tech_stack e roadmap sem [A CONFIRMAR] |
+| 1. Especificar | "planeje a F01" | `spec-feature` | branch e `specs/features/F01-*/`, com o dono de cada grupo |
+| 2. Implementar | conversa nova, depois "implemente o Grupo 1 da F01" | `implementar-grupo` | código seguindo a spec; para nos grupos ⚠ |
+| 3. Validar | "valide a F01" | `validate-feature` | testes, mutações, revisão independente, checklist humano e PR |
+| 4. Replanejar | "replan" | `replan` | constituição e roadmap atualizados antes da próxima feature |
+{{#se codex}}
+
+No Codex, as skills aparecem em `/skills` e são chamadas com `$nome` ou pelo pedido em texto.
+{{/se}}
+
+Regras de ouro:
+- Corrija **conversando**, não editando os `.md` à mão: assim o agente mantém spec e código em sincronia.
+- Conversa nova entre especificar e implementar: o contexto passa a ser a spec, não o histórico.
+- No passo 2, seu papel é de arquiteto: acompanhe o console e o diff.
+- O CI decide, e nada entra na `main` sem CI verde e o seu ok.
+
+## Primeiros passos
+
+```bash
+python{{PYTHON}} -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+pytest -q && ruff check .
+```
+
+Primeira mensagem ao agente: **"vamos fechar a constituição"** (F00).

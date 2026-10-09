@@ -1,0 +1,121 @@
+# AGENTS.md — {{PROJETO}}
+
+Regras deste repo para qualquer agente de código (Claude Code{{#se codex}}, Codex{{/se}}). O `CLAUDE.md` importa este arquivo e acrescenta só o que é do Claude Code.
+
+Este repositório segue o fluxo **spec-first**: a spec é o cérebro, o agente é o músculo.
+Nada é implementado sem uma spec aprovada, e a spec muda junto com o código.
+
+## Antes de qualquer tarefa
+
+0. `start_here.md` dá o panorama e a próxima ação; ele resume, não decide.
+1. Leia `specs/constitution/mission.md`, `tech_stack.md` e `roadmap.md`. Eles são a fonte da verdade.
+2. Se a tarefa pertence a uma feature, leia `specs/features/<Fxx-nome>/` (plan, requirements, validation).
+3. Se não existe spec para o pedido, **não implemente**: proponha a skill `spec-feature`. Se o pedido não está no roadmap ou contradiz a constituição, proponha a `replan`.
+
+As skills do fluxo (`constitution-interview`, `spec-feature`, `implementar-grupo`, `validate-feature`, `replan`) ficam em `.claude/skills/`.{{#se codex}} O Codex as encontra por `.agents/skills`, um link para essa pasta.{{/se}}
+
+## Regras de trabalho
+
+- **Uma feature, uma branch:** `feature/Fxx-nome`. Spec e código entram juntos, num PR por feature.
+- **Correção pela conversa:** o que {{DONO}} pede para corrigir, o agente corrige na spec e no código juntos. A spec nunca descreve algo diferente do código; uma spec antiga que outra feature mudou ganha uma emenda "desde a Fxx".
+- **Por grupos:** implemente pelos grupos de tarefas do `plan.md`. Num grupo ⚠ (toca {{ALERTA}}, ou as permissões dos próprios agentes: `.claude/settings.json`{{#se codex}} e `.codex/`{{/se}}), o dono para ao fim do grupo e mostra o diff a {{DONO}}. Grupos ⚠ correm em sequência, nunca dois ao mesmo tempo{{#se codex}}, nem em agentes diferentes{{/se}}.
+- **Comando ⚠ novo vira regra:** o grupo que cria um comando que toca ambiente real o acrescenta às regras dos agentes: exclusão como `deny` no `.claude/settings.json`{{#se codex}} e `forbidden` em `.codex/rules/`{{/se}}; o resto como `ask`{{#se codex}} e `prompt`{{/se}}{{#se codex}}, com a linha na tabela `EXPECTED_DECISIONS` do `tests/test_processo.py`{{/se}}. Sem isso, o ⚠ fica só no texto.
+- **Constituição primeiro:** mudança que contradiz a constituição para o trabalho, e a alteração é proposta pela skill `replan`. Regra que precisa valer adiante vai para este arquivo ou para a constituição: escrita só numa spec, ela não protege a próxima feature.
+- **Docs atuais:** nomes de produto, comandos e chaves de configuração mudam rápido. Confirme na documentação atual antes de citar API, CLI, chave ou recurso, e registre a data da conferência.
+- **Mutação:** todo teste novo de contrato ou de dado é provado por uma mutação que o faz falhar, feita numa cópia (`git archive HEAD | tar -x -C <pasta temporária>` ou uma worktree descartável), nunca no repo.
+- **Evidência:** todo resultado registrado (teste real, aceite, deploy, publicação) diz se foi observado por quem escreve ou relatado por {{DONO}} ou por outro agente, e cita o commit ou o hash do que foi testado. Logs, prints e mutações citados ficam no `validation.md` ou no repo, nunca só numa pasta temporária.
+- **Revisão independente:** toda feature passa por uma revisão numa sessão nova, sem histórico, com só a constituição, a spec e o diff ({{#se codex}}feita pelo agente que não integra{{/se}}{{#se !codex}}um subagente ou uma sessão nova{{/se}}). O prompt fica na skill `validate-feature`.
+- **CI decide:** nada entra na branch da feature nem na `main` com o CI vermelho. O merge na `main` acontece com o ok de {{DONO}}; correção achada depois do merge vai num PR `fix(Fxx)` próprio.
+- **Fim do dia:** quem integra atualiza o `start_here.md` (data, branch ativa, próxima ação, o que aguarda {{DONO}}, estado agora, pendências e uma linha no registro diário), no PR da feature ou do replan em curso, e não num PR próprio. Se ele divergir da constituição, a constituição vence e o `start_here.md` é corrigido.
+- **Idioma e nomes:** commits, PRs e specs em português. Testes têm nome de domínio (`test_publicacao.py`), não de feature (`test_f03.py`).
+- **Commits:** `spec(Fxx)` (spec e registros), `feat(Fxx-gN)` ou `feat(Fxx)`, `fix(Fxx)`, `handoff(Fxx-gN)`, `merge(Fxx-gN)` (merge `--no-ff` de grupo), `spec(replan)`, `spec(constitution)`, `docs(start_here)`, `chore`. **Branches:** `feature/Fxx-nome`, `feature/Fxx-nome--gN-{{#se codex}}<claude|codex>{{/se}}{{#se !codex}}claude{{/se}}`, `feature/Fxx-nome--prova` (prova descartável de um gate do CI), `spec/constituicao`, `spec/replan-<fxx>`, `fix/Fxx-<curto>` (correção depois do merge).
+
+## Grupos e integração
+
+### Dono por grupo
+
+Cada `### Grupo N` do `plan.md` tem, logo abaixo do título, a linha com o dono, a branch (se o grupo roda fora da branch da feature) e o que o grupo toca, separados por ` · `:
+
+```
+### Grupo N — <nome> ⚠
+Dono: {{#se codex}}Codex{{/se}}{{#se !codex}}Claude Code{{/se}} · Branch: `feature/Fxx-nome--gN-{{#se codex}}codex{{/se}}{{#se !codex}}claude{{/se}}` · Toca: `<caminhos>`
+```
+
+- O dono é obrigatório em todo grupo, também nos ⚠: `Claude Code`{{#se codex}}, `Codex (cloud)` ou `Codex`. O Codex só é dono de grupo ⚠ fora do cloud{{/se}}.
+- `Branch` só aparece quando o grupo roda fora da branch da feature (subagente em worktree{{#se codex}} ou o outro agente{{/se}}). `Toca` aparece sempre, e só grupos com `Toca` disjunto correm em paralelo.
+- O `plan.md` tem, logo abaixo do título, a linha `Integra: Claude Code`{{#se codex}} (o padrão) ou `Integra: Codex`, que só {{DONO}} escolhe{{/se}}. Mudar dono ou quem integra é correção da spec, pela conversa.
+
+### Protocolo
+
+1. **Branches.** A branch da feature é a de integração. Um grupo feito fora dela vai para `feature/Fxx-nome--gN-{{#se codex}}<claude|codex>{{/se}}{{#se !codex}}claude{{/se}}`, criada a partir da branch da feature quando o grupo começa, numa worktree própria e fora do iCloud. Nenhum segredo vai para uma worktree: nem cópia de `.env`, nem entrada no `.worktreeinclude`.
+2. **Arquivos de quem integra.** `start_here.md`, `specs/constitution/`, o "Registro dos grupos" e o "Resultado" do `validation.md` só são escritos por quem integra. Cada dono marca os checkboxes do próprio grupo no `plan.md` e atualiza spec e código juntos.
+3. **Fechar um grupo.**
+   - Passam `pytest -q`, `ruff check .` e os demais comandos de "Comandos" que o grupo tocar, na worktree do grupo.
+   - **Contrato.** O grupo que define um contrato entre partes (cliente e servidor, quem publica e quem lê) escreve o formato de cada pedido e de cada resposta, com os nomes dos campos, e um teste passa os exemplos de quem consome pelo validador de quem produz. O grupo que consome lê esse validador antes de usar o contrato e o cita no handoff.
+   - `Desvios da spec` compara o diff com as seções Interfaces e Requisitos do `requirements.md`, item por item, e não com a memória do agente.
+   - Antes do commit de handoff, salve a mensagem num arquivo e rode `python scripts/check_handoff.py --file <arquivo>`. O CI recusa handoff sem os campos e formatos obrigatórios. Um handoff ruim já enviado se corrige com outro commit `handoff(...)` do mesmo grupo, sem push forçado: vale o último.
+   - Num grupo ⚠, cada comando ⚠ pede a aprovação de {{DONO}} antes de rodar, e o dono mostra o diff a {{DONO}} antes do handoff.
+4. **Integrar.** Antes do merge de um grupo, quem integra confere o handoff: refaz os desvios declarados contra a spec e o diff, confere o `Contrato` contra o validador e prova cada teste novo de contrato ou de dado com pelo menos uma mutação própria, numa cópia. O que não confere vira achado na coluna "Handoff conferido". Depois vêm o merge `--no-ff` na branch da feature, só com o CI do grupo verde; a suíte inteira; a transcrição do handoff no "Registro dos grupos", com mutações, conflitos e correções; e a remoção da worktree e da branch do grupo.
+
+Handoff, no corpo do último commit do grupo:
+
+```
+handoff(Fxx-gN): <resumo>
+
+Feito: …
+Contrato: <formatos definidos ou usados; validador conferido> (ou "não toca contrato")
+Testes: pytest -q (N passados), ruff limpo[, outros comandos]
+Mutações: <teste> ← <mutação> (falhou)
+Evidência: <onde ficam no repo as provas citadas; o que foi observado e o que foi relatado, com commit ou hash>
+CI: <run> verde
+Desvios da spec: <comparados com Interfaces e Requisitos> (ou "nenhum")
+```
+{{#se codex}}
+
+### Codex
+
+- Roda com o perfil de permissões `{{SLUG}}` do `.codex/config.toml` (escrita no workspace, rede só para os registros de pacote, sem leitura dos arquivos de segredo) e com as regras de `.codex/rules/`: push forçado, push na `main` e `git add -f` são recusados{{#se databricks}}, assim como excluir app ou recurso do Lakebase{{/se}}; todo `git push`, `git add` e `gh pr`/`gh api` pedem aprovação{{#se databricks}}, como todo comando `databricks`{{/se}}. Comando ⚠ do projeto entra nessas regras quando nasce (regra acima).
+- O perfil só vale quando a conversa não força um modo de sandbox: no app, deixe o seletor de permissões no perfil do projeto; no CLI, não use `-s`/`--sandbox`.
+- Faz push só da branch do próprio grupo, e cada push passa pela aprovação de {{DONO}}, que confere o destino e as opções: nunca na `main` (nem por `<algo>:main`, `--all` ou `+branch`, que o GitHub Free não barra num repo privado) e nunca na branch da feature, salvo com `Integra: Codex`. PR e merge ficam com quem integra. Sem `Integra: Codex`, o texto de `start_here.md` e do roadmap vai no handoff, e quem integra transcreve.
+- Numa worktree nova, o setup é `bash .codex/setup-worktree.sh` (o ambiente local do app o roda sozinho; no CLI, à mão). Nunca copie `.env` ou outro segredo para uma worktree, nem use nela a venv do checkout principal.
+- **No app:** a conversa de um grupo começa com "worktree" marcada, o ambiente local selecionado e a branch da feature como base, nunca a `main`. Sinais de base errada: falta o `AGENTS.md`, o setup sai com 127 ou o perfil de permissões não carrega. Nunca use "Hand off" para "Local": o checkout local é o do Claude Code. O app guarda 15 worktrees por padrão; baixe o limite (3 bastam) e remova a worktree depois de integrar.
+- **No Codex cloud** (`Dono: Codex (cloud)`, o padrão para grupo do Codex sem ⚠, porque não gasta disco local): parte da branch da feature no GitHub, que quem integra empurra antes; não recebe credencial de ambiente real; faz código, testes e lint, e nunca é dono de grupo ⚠. Ele age no GitHub com a identidade de {{DONO}}, e nada trava um push fora da branch do grupo: antes de cada merge, quem integra confere que a `main` e a branch da feature estão onde ele as deixou.
+{{/se}}
+
+## Invariantes (valem para todo código deste repo)
+
+- Nenhum segredo (token, chave de API, senha) nem identificador pessoal (email, id de conta) em arquivo versionado: segredo só por variável de ambiente, perfil de CLI ou cofre.
+- Agentes não excluem recurso de ambiente real; quem exclui é {{DONO}}, à mão.
+{{#se agente}}
+- O agente do produto nunca altera as próprias instruções (prompt, rubrica, manifest) durante um run: mudança nelas é feature, com versão nova do agente.
+{{/se}}
+{{INVARIANTES}}
+
+## Estrutura
+
+```
+AGENTS.md             regras para qualquer agente (este arquivo)
+CLAUDE.md             importa o AGENTS.md e acrescenta o que é só do Claude Code
+start_here.md         panorama, próxima ação e registro diário
+specs/constitution/   mission, tech_stack, roadmap (fonte da verdade)
+specs/features/       uma pasta por feature: plan.md, requirements.md, validation.md
+specs/features/_template/
+scripts/              check_handoff.py (conferidor do handoff, usado no CI)
+tests/                test_processo.py (regras do fluxo), test_handoff.py e os testes do código
+.claude/              skills do fluxo e settings.json (o que os agentes nunca fazem)
+{{#se codex}}
+.agents/skills        link para .claude/skills (skills no Codex)
+.codex/               perfil de permissões, regras de comando e setup de worktree do Codex
+{{/se}}
+```
+
+## Comandos
+
+- Ambiente: `python{{PYTHON}} -m venv .venv && .venv/bin/pip install -e ".[dev]"` (numa worktree, a venv da própria worktree)
+- Testes: `pytest -q`; os de ambiente real (`pytest -m integration`) só quando {{DONO}} pedir
+- Lint: `ruff check .`
+- Handoff: `python scripts/check_handoff.py --file <mensagem>`
+
+## Por área
+
+Nenhuma área com regras próprias ainda. Quando uma pasta ganhar regras próprias (um app, por exemplo), ela recebe um `AGENTS.md` dela, citado aqui.

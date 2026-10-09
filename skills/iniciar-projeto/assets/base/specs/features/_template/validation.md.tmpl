@@ -1,0 +1,55 @@
+# Fxx — <nome da feature> · Validação
+
+A feature só fecha quando todos os itens abaixo estão marcados, os humanos inclusive. Cada resultado diz se foi observado por quem escreve ou relatado por {{DONO}} ou por outro agente, com o commit ou o hash do que foi testado.
+
+## Automática
+
+- [ ] `pytest -q` passa (novos testes: <liste>)
+- [ ] `ruff check .` limpo
+- [ ] Cada teste novo de contrato ou de dado tem uma mutação que o faz falhar, registrada em "Mutações"
+- [ ] <teste de integração contra o ambiente real, se aplicável: `pytest -m integration -k ...`, com o run registrado e sem deixar dado de teste para trás>
+
+## Humana ({{DONO}})
+
+- [ ] <verificação que só uma pessoa faz, com o caso concreto: "a tela X mostra Y para a entrada Z">
+- [ ] Diff revisado em alto nível: comportamento e estrutura batem com `plan.md` e `requirements.md`
+
+## Sincronia spec ↔ código
+
+- [ ] Cada requisito R/N aponta para onde está implementado e testado (mapa abaixo); o que só tem verificação humana está dito
+- [ ] Nada no código que não esteja na spec (ou a spec foi atualizada)
+- [ ] Invariantes do `AGENTS.md` conferidos no diff inteiro por quem integra (escrita fora do permitido, segredos e identificadores pessoais nas linhas adicionadas)
+- [ ] Revisão independente numa sessão nova{{#se codex}} do agente que não integra{{/se}}, com só a constituição, a spec e o diff{{#se codex}} (ou um subagente de quem integra, com o motivo registrado){{/se}}: achados reproduzidos, corrigidos com spec e código juntos e registrados abaixo
+
+| Requisito | Implementado em | Testado em |
+|---|---|---|
+| R1 | | |
+
+## Mutações
+
+Feitas numa cópia ou worktree temporária, nunca no repo, uma por vez. Uma mutação que sobrevive pode ser mal escolhida (ou cair numa coincidência da fixture): repita com uma mutação limpa antes de chamar o teste de fraco.
+
+| Camada (autor, quem integra, revisor) | Teste | Mutação | Resultado | Commit |
+|---|---|---|---|---|
+
+## Registro dos grupos
+
+Escrito por quem integra (protocolo no `AGENTS.md`). "Handoff conferido": desvios refeitos contra a spec e o diff, `Contrato` contra o validador e mutação própria; o que não confere vira achado.
+
+| Grupo | Dono | Branch | Commit do handoff | CI | Handoff conferido | Integrado em | Conflitos e correções |
+|---|---|---|---|---|---|---|---|
+| 1 | <dono> | `feature/Fxx-<nome>` | | | | | |
+
+## Revisão independente
+
+<Quem revisou (sessão nova de qual agente, ou subagente e por quê), o commit revisado, os pontos de maior risco pedidos ao revisor e os achados numerados, do mais grave ao menos grave, cada um com o que foi feito.>
+
+## Limites conhecidos
+
+<Limitações aceitas sem correção, cada uma com o motivo e, se houver, a feature que a resolve.>
+
+## Resultado
+
+<Preenchido no fechamento por quem integra: data, o que passou, o que virou pendência e para qual feature, custo se houve.>
+
+**Para o replan:** <o que esta feature ensinou que pode mudar regra, stack ou prioridade>

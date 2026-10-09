@@ -1,0 +1,27 @@
+---
+name: constitution-interview
+description: Fecha a constituição do projeto (specs/constitution/mission.md, tech_stack.md, roadmap.md) entrevistando {{DONO}} sobre os itens [A CONFIRMAR] e as decisões em aberto. Use na primeira sessão do repo (feature F00), quando pedirem para fechar a constituição ou para revisá-la do zero.
+---
+
+# constitution-interview
+
+O produto desta skill é a constituição fechada, não código.
+
+## Passos
+
+1. Leia `AGENTS.md`, `start_here.md` e os três arquivos de `specs/constitution/`.
+2. Liste, numerados, os itens **[A CONFIRMAR]** e as "Decisões em aberto" do roadmap.
+3. Entreviste em rodadas de 3 a 5 perguntas. Para cada decisão, ofereça as opções com o trade-off numa linha e a sua recomendação; {{DONO}} decide. Não pergunte o que já está escrito. Cubra também:
+   - missão e público: o que é, para quem agora e depois, o que fica fora;
+   - critério de sucesso verificável, e objetivos que medem resultado, não volume;
+   - stack e plataforma, com os limites conferidos na doc atual (cotas, plano gratuito, o que para sozinho) e a data da conferência;
+   - o que é ⚠ neste projeto e os invariantes que nenhum código pode quebrar;
+   - calendário: marcos com data e se vale a regra do marco corrente;
+   - granularidade do roadmap: cada feature cabe numa branch e num PR? Divida as grandes;
+   - política de testes e o que conta como "pronto" (o padrão já está no `tech_stack.md`).
+4. Aplique as respostas nos três arquivos de forma consistente: decisão de stack que mexe no roadmap atualiza os dois, e decisão que mexe em regra de trabalho atualiza também o `AGENTS.md` (e o `tests/test_processo.py`, se a regra é testada). Tire o [A CONFIRMAR] do que foi decidido e o aviso de "Rascunho semente" quando não sobrar nenhum. Atualize a frase do `README.md`.
+5. Registre cada decisão em "Decisões", no `roadmap.md`: `AAAA-MM-DD — decisão — porquê`.
+6. Mostre o diff resumido e peça correções; correções entram pela conversa, e o agente edita.
+7. Se o repo ainda não está no GitHub, proponha criá-lo privado (`gh repo create <nome> --private --source . --push`, a partir da `main` com o esqueleto), só com o ok explícito de {{DONO}}, e confira o CI do primeiro push.
+8. Rode `pytest -q` e `ruff check .`. Commit `spec(constitution): fecha decisões iniciais` numa branch `spec/constituicao` e PR para a `main`, mesclado com o CI verde e o ok de {{DONO}}.
+9. Atualize o `start_here.md` (próxima ação: `spec-feature` da F01) e sugira uma conversa nova para especificar a F01.

@@ -1,0 +1,144 @@
+# Regras de comando do Codex para este repo. Só carregam com o projeto marcado como confiável.
+# Vale a decisão mais restritiva: forbidden > prompt > allow. "allow" roda fora do sandbox sem
+# pedir aprovação, então só vale para comando sem opção perigosa. As regras casam por prefixo de
+# comando: um flag depois do destino (git push origin x --force), um "git -C <pasta> push" ou o
+# caminho absoluto do binário escapam delas; é limite aceito, coberto pelo sandbox e pelo "prompt".
+# Toda mudança aqui atualiza a tabela EXPECTED_DECISIONS de tests/test_processo.py.
+{{#se databricks}}
+
+# --- Nunca: exclusão de app e de recurso do Lakebase (espelho do deny do .claude/settings.json) ---
+
+prefix_rule(
+    pattern = ["databricks", "apps", "delete"],
+    decision = "forbidden",
+    justification = "Excluir um app do Databricks Apps é proibido para agentes.",
+    match = ["databricks apps delete meu-app --profile p"],
+)
+
+prefix_rule(
+    pattern = ["databricks", "postgres", [
+        "delete-branch",
+        "delete-catalog",
+        "delete-database",
+        "delete-endpoint",
+        "delete-project",
+        "delete-role",
+        "delete-synced-table",
+    ]],
+    decision = "forbidden",
+    justification = "Excluir recurso do Lakebase é proibido para agentes.",
+    match = ["databricks postgres delete-project projects/x"],
+    not_match = ["databricks postgres list-branches projects/x"],
+)
+{{/se}}
+
+# --- Nunca: push forçado ou na main ---
+
+prefix_rule(
+    pattern = ["git", "push", ["--force", "-f", "--force-with-lease", "--force-if-includes", "--mirror"]],
+    decision = "forbidden",
+    justification = "Push forçado é proibido: um handoff ruim se corrige com outro commit.",
+    match = ["git push --force origin feature/F01-x--g2-codex", "git push -f"],
+)
+
+prefix_rule(
+    pattern = ["git", "push", "origin", ["--force", "-f", "--force-with-lease", "--force-if-includes", "--mirror"]],
+    decision = "forbidden",
+    justification = "Push forçado é proibido.",
+    match = ["git push origin --force feature/F01-x--g2-codex"],
+)
+
+prefix_rule(
+    pattern = ["git", "push", "origin", ["main", "HEAD:main", "+main", ":main", "refs/heads/main", "HEAD:refs/heads/main", "+HEAD:main"]],
+    decision = "forbidden",
+    justification = "Push na main é proibido: a main só recebe merge de PR com CI verde e o ok de {{DONO}}.",
+    match = ["git push origin main", "git push origin HEAD:main", "git push origin HEAD:refs/heads/main"],
+    not_match = ["git push origin feature/F01-x--g1-codex"],
+)
+
+prefix_rule(
+    pattern = ["git", "push", ["-u", "--set-upstream"], "origin", ["main", "HEAD:main", "+main", "refs/heads/main", "HEAD:refs/heads/main"]],
+    decision = "forbidden",
+    justification = "Push na main é proibido.",
+    match = ["git push -u origin main"],
+)
+
+# --- Com aprovação: comandos ⚠ e GitHub ---
+# Acrescente aqui, como "prompt", cada comando do projeto que toca ambiente real (publicação,
+# deploy, banco), com uma linha correspondente em EXPECTED_DECISIONS.
+{{#se databricks}}
+
+prefix_rule(
+    pattern = ["databricks"],
+    decision = "prompt",
+    justification = "Comando Databricks: toca o workspace ou a credencial do CLI; pede aprovação.",
+    match = ["databricks apps get meu-app --profile p", "databricks bundle deploy --profile p"],
+)
+{{/se}}
+
+prefix_rule(
+    pattern = ["gh", ["pr", "api", "repo"]],
+    decision = "prompt",
+    justification = "PR e API do GitHub ficam com quem integra; pede aprovação.",
+    match = ["gh pr create --base feature/F01-x", "gh api repos/x/y"],
+)
+
+prefix_rule(
+    pattern = ["git", "push", ["--delete", "-d"]],
+    decision = "prompt",
+    justification = "Apagar branch remota pede aprovação.",
+    match = ["git push --delete origin feature/F01-x--g1-codex"],
+)
+
+prefix_rule(
+    pattern = ["git", "push", "origin", ["--delete", "-d"]],
+    decision = "prompt",
+    justification = "Apagar branch remota pede aprovação.",
+    match = ["git push origin --delete feature/F01-x--g1-codex"],
+)
+
+# --- git add: roda fora do sandbox, então pede aprovação; forçar arquivo ignorado é proibido ---
+# Com "allow", um "git add -f .env" levaria o segredo ao commit apesar da leitura negada no perfil.
+
+prefix_rule(
+    pattern = ["git", "add", ["-f", "--force"]],
+    decision = "forbidden",
+    justification = "Forçar arquivo ignorado (como .env) para o git é proibido.",
+    match = ["git add -f .env", "git add --force .env"],
+)
+
+prefix_rule(
+    pattern = ["git", "add"],
+    decision = "prompt",
+    justification = "O git add roda fora do sandbox; {{DONO}} confere os caminhos antes.",
+    match = ["git add tests/test_processo.py"],
+)
+
+# --- Todo push pede aprovação ---
+# "allow" rodaria fora do sandbox sem pedir: um "git push --receive-pack=<comando> ..." executa o
+# comando na máquina, e um "x:main", "--all" ou "+branch" chega à main ou força o push. Com "prompt",
+# {{DONO}} confere o destino e as opções de cada push (o da branch do grupo, para o CI rodar nela).
+
+prefix_rule(
+    pattern = ["git", "push"],
+    decision = "prompt",
+    justification = "Todo push pede aprovação: confira o destino (só a branch do grupo) e as opções.",
+    match = ["git push -u origin feature/F01-x--g1-codex", "git push origin feature/x:main"],
+)
+
+# --- Sem aprovação (fora do sandbox): commit e branch do grupo ---
+# O commit numa worktree escreve no .git do checkout principal, fora da raiz do workspace.
+
+prefix_rule(
+    pattern = ["git", "commit"],
+    decision = "allow",
+    justification = "Commit na branch do grupo.",
+    match = ["git commit -m handoff", "git commit -a -m handoff"],
+)
+
+prefix_rule(
+    pattern = ["git", "switch", ["-c", "--create"]],
+    decision = "allow",
+    justification = "Criar a branch do grupo.",
+    match = ["git switch -c feature/F01-x--g1-codex"],
+)

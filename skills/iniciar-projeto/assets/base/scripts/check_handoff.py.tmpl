@@ -1,0 +1,171 @@
+"""Confere o formato dos handoffs novos, sem julgar o conteúdo (isso é de quem integra).
+
+    python scripts/check_handoff.py <base> <head>     # handoffs de base..head
+    python scripts/check_handoff.py --file <arquivo>  # mensagem rascunhada, antes do commit
+    python scripts/check_handoff.py --ci              # intervalo do evento do GitHub Actions
+
+Saída 0 sem problema, 1 com problema, 2 em erro de uso ou de git. Num intervalo, vale o último
+handoff de cada grupo: um handoff ruim já enviado se corrige com outro do mesmo grupo, sem push
+forçado.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+FIELDS = ("Feito", "Contrato", "Testes", "Mutações", "Evidência", "CI", "Desvios da spec")
+SUBJECT = re.compile(r"^handoff\((F\d{2,}-g\d+)\): \S.*$")
+# Todo assunto que começa com a palavra "handoff" é conferido: um "Handoff(...)" ou um
+# "handoff F01-g1:" malformado é recusado, em vez de passar em silêncio.
+TENTATIVA = re.compile(r"handoff\b", re.IGNORECASE)
+GRUPO = re.compile(r"F\d{2,}-g\d+")
+FIELD = re.compile(r"^([^:\n]+):(?:[ \t]*)(.*)$")
+# Trailer (Co-Authored-By:, Revisão-Por:) encerra o campo: palavras com hífen, a primeira com
+# maiúscula. Uma continuação como "pré-voo: conferido" não é trailer.
+TRAILER = re.compile(r"^[A-ZÀ-Þ][^\W\d_]*(?:-[^\W\d_]+)+:[ \t]*")
+# "run 123", "run #160" ou o link do run; um número solto ("351 testes") não é run.
+RUN = re.compile(r"(?:\brun\s*#?\d+\b|https?://\S+/actions/runs/\d+\b)", re.IGNORECASE)
+
+
+class GitError(Exception):
+    pass
+
+
+def git(*args: str) -> str:
+    result = subprocess.run(["git", *args], capture_output=True, text=True, check=False)
+    if result.returncode:
+        raise GitError(result.stderr.strip() or f"git {' '.join(args)} falhou")
+    return result.stdout.strip()
+
+
+def check_message(message: str) -> list[str]:
+    lines = message.splitlines()
+    subject = lines[0] if lines else ""
+    problems: list[str] = []
+    if not SUBJECT.fullmatch(subject):
+        problems.append("assunto deve seguir handoff(Fxx-gN): <resumo>")
+
+    values: dict[str, list[str]] = {}
+    current: str | None = None
+    for line in lines[1:]:
+        match = FIELD.match(line)
+        if match and match.group(1) in FIELDS:
+            current = match.group(1)
+            if current in values:
+                problems.append(f"{current}: campo repetido")
+            else:
+                values[current] = [match.group(2)]
+            continue
+        if TRAILER.match(line):
+            current = None
+        elif current is not None:
+            values[current].append(line)
+
+    for field in FIELDS:
+        if field not in values:
+            problems.append(f"{field}: campo ausente")
+        elif not "\n".join(values[field]).strip():
+            problems.append(f"{field}: campo vazio")
+
+    mutations = "\n".join(values.get("Mutações", [])).strip()
+    if mutations and not (
+        ("←" in mutations and "(falhou)" in mutations)
+        # "nenhuma" só vale no começo e com o motivo: "nenhuma falhou" quer dizer o oposto.
+        or (
+            re.match(r"nenhuma\b", mutations, re.IGNORECASE)
+            and re.search(r"\b(porque|pois|já que|motivo)\b", mutations, re.IGNORECASE)
+        )
+    ):
+        problems.append("Mutações: exige ← e (falhou), ou nenhuma com o motivo (porque…)")
+    ci = "\n".join(values.get("CI", [])).strip()
+    if ci and not RUN.search(ci):
+        problems.append("CI: cite o número ou link de um run")
+    elif ci and not re.search(r"\bverde\b", ci, re.IGNORECASE):
+        problems.append("CI: o run citado precisa estar verde")
+    return problems
+
+
+def interval_from_ci() -> tuple[str, str]:
+    name = os.environ.get("GITHUB_EVENT_NAME")
+    path = os.environ.get("GITHUB_EVENT_PATH")
+    if not path:
+        raise ValueError("GITHUB_EVENT_PATH ausente")
+    event = json.loads(Path(path).read_text(encoding="utf-8"))
+    if name == "push":
+        base, head = event["before"], event["after"]
+    elif name == "pull_request":
+        base, head = event["pull_request"]["base"]["sha"], event["pull_request"]["head"]["sha"]
+    else:
+        raise ValueError(f"evento não suportado: {name}")
+    git("rev-parse", "--verify", f"{head}^{{commit}}")
+    # Branch nova (before zerado) ou push que reescreveu o histórico: confere desde a main.
+    if (
+        base == "0" * 40
+        or subprocess.run(
+            ["git", "merge-base", "--is-ancestor", base, head], check=False
+        ).returncode
+    ):
+        base = "origin/main"
+    return base, head
+
+
+def check_interval(base: str, head: str) -> tuple[int, int]:
+    # --no-merges: a mensagem de um merge não é handoff. Um git log só, e não um git show por
+    # commit, para o passo continuar rápido numa máquina carregada.
+    log = git("log", "--reverse", "--no-merges", "--format=%H%x00%B%x1e", f"{base}..{head}")
+    last: dict[str, tuple[str, str]] = {}
+    for record in filter(None, (item.strip("\n") for item in log.split("\x1e"))):
+        sha, _, message = record.partition("\x00")
+        message = message.strip("\n")
+        subject = message.splitlines()[0] if message else ""
+        if TENTATIVA.match(subject):
+            # O grupo vem de qualquer ponto do assunto, para que um handoff novo do grupo substitua
+            # um de assunto malformado ("handoff(F01-g1: …"); sem grupo, a chave é o próprio commit.
+            group = GRUPO.search(subject)
+            key = group.group(0) if group else sha
+            last[key] = (sha, message)
+    for sha, message in last.values():
+        subject = message.splitlines()[0] if message else ""
+        for problem in check_message(message):
+            print(f"{sha[:7]} {subject}: {problem}")
+    bad = sum(bool(check_message(message)) for _, message in last.values())
+    print(f"{len(last)} handoff(s) conferido(s), {bad} com problema")
+    return len(last), bad
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument("--file", type=Path, help="mensagem rascunhada")
+    source.add_argument("--ci", action="store_true", help="intervalo do evento do GitHub Actions")
+    parser.add_argument("base", nargs="?")
+    parser.add_argument("head", nargs="?")
+    args = parser.parse_args()
+    if bool(args.file or args.ci) == bool(args.base or args.head) or bool(args.base) != bool(
+        args.head
+    ):
+        parser.error("use <base> <head>, --file ou --ci")
+    try:
+        if args.file:
+            message = args.file.read_text(encoding="utf-8")
+            subject = message.splitlines()[0] if message else ""
+            problems = check_message(message)
+            for problem in problems:
+                print(f"{subject}: {problem}")
+            print(f"1 handoff(s) conferido(s), {int(bool(problems))} com problema")
+            return int(bool(problems))
+        base, head = interval_from_ci() if args.ci else (args.base, args.head)
+        return int(check_interval(base, head)[1] > 0)
+    except (OSError, ValueError, KeyError, GitError, json.JSONDecodeError) as error:
+        print(f"erro: {error}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

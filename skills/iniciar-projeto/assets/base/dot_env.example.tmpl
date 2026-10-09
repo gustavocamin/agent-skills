@@ -1,0 +1,8 @@
+# Copie para .env (nunca versionado) e preencha só quando uma feature pedir.
+# Segredos de ferramentas locais (runner, scripts) ficam fora do repo e do iCloud,
+# em ~/.config/{{SLUG}}/, com chmod 600. Prefira login por perfil (OAuth) a chave fixa.
+{{#se databricks}}
+DATABRICKS_HOST=
+DATABRICKS_WAREHOUSE_ID=
+# Sem token aqui: use um perfil do CLI (databricks auth login --profile <perfil>) e passe --profile sempre.
+{{/se}}

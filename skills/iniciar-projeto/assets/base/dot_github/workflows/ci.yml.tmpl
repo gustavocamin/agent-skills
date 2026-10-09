@@ -1,0 +1,18 @@
+name: ci
+on: [push, pull_request]
+# O CI só lê o repo: nenhum passo escreve no GitHub.
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        # Histórico inteiro: o conferidor de handoff lê os commits novos do push ou do PR.
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "{{PYTHON}}" }
+      - run: pip install -e ".[dev]"
+      - run: python scripts/check_handoff.py --ci
+      - run: ruff check .
+      - run: pytest -q

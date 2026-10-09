@@ -1,0 +1,27 @@
+---
+name: replan
+description: Replanejamento entre features — revisa a constituição com o que foi aprendido, propaga as mudanças para specs e código existentes, ajusta o roadmap e registra as decisões. Use depois de fechar uma feature, antes da próxima, ou quando um pedido contradiz a constituição ou não está no roadmap.
+---
+
+# replan
+
+## Passos
+
+1. Leia `AGENTS.md`, `start_here.md`, `specs/constitution/` e, da última feature fechada, o "Resultado", os "Limites conhecidos" e a revisão independente do `validation.md`.
+2. Pergunte a {{DONO}}, numa rodada só:
+   - o que a feature ensinou que muda stack, testes, processo ou prioridades;
+   - se alguma decisão em aberto já pode ser fechada;
+   - se as datas do roadmap ainda batem com a agenda (marcos, prazos, trabalho);
+   - se alguma feature futura deveria ser reagrupada, dividida ou cortada;
+   - se alguma pendência ficou sem feature dona.
+3. Proponha as mudanças como lista antes de editar. Depois do ok:
+   - atualize `mission.md`, `tech_stack.md` e `roadmap.md`, e o `AGENTS.md` (com o `tests/test_processo.py`, se a regra é testada) quando a mudança mexe em regra de trabalho;
+   - procure specs de features fechadas e código que a mudança invalida. Atualize os dois juntos (emenda "desde a Fxx" na spec antiga) ou registre a pendência no "Pronto quando" de uma feature futura. Pendência mandada só para "a próxima feature" some;
+   - confira as regras sem trava contra a realidade, com dado objetivo (quem fez o push, o que o agente acessou, o que o CI rodou): uma regra que diverge do que acontece se corrige aqui;
+   - quando a regra muda o formato de uma spec, mude também `specs/features/_template/` (somente leitura local: `chmod u+w`, edite, `chmod a-w`) e o `tests/test_processo.py`;
+   - regra de processo que falhou na prática vira teste ou passo de CI, provado com um run vermelho numa branch descartável (`feature/Fxx-nome--prova`) e depois verde.
+4. Adicione uma entrada datada em "Decisões", no `roadmap.md`, com o porquê.
+5. Atualize o `start_here.md`: próxima ação, status das features e pendências.
+6. Commit `spec(replan): <resumo>` numa branch `spec/replan-<feature>` e PR para a `main`, mesclado com o CI verde e o ok de {{DONO}}.
+7. Se um aprendizado vale para qualquer projeto, e não só para este, proponha a {{DONO}} levá-lo ao kit que criou este repo, a skill `iniciar-projeto` (em `~/.claude/skills/iniciar-projeto/`, ou onde ela estiver instalada: `references/aprendizados.md` e o template que o aplica), para o próximo projeto já nascer com ele.
+8. Sugira uma conversa nova e a próxima feature (`spec-feature`).
