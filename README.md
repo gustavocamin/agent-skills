@@ -7,7 +7,7 @@ no setup de qualquer ambiente cloud (Claude Code na web, Codex cloud).
 
 | Pasta | Quando entra | Skills |
 | --- | --- | --- |
-| `skills/` | sempre | `iniciar-projeto` (cria um projeto no fluxo spec-first) e 8 skills do MLflow (avaliação de agentes, tracing, traces, métricas, docs), vindas do [mlflow/skills](https://github.com/mlflow/skills) (ver [TERCEIROS.md](TERCEIROS.md)) |
+| `skills/` | sempre | `iniciar-projeto` (cria um projeto no fluxo spec-first), `skill-pessoal` (cria ou muda uma skill deste repo), `liberar-disco` (mede o disco e propõe o que limpar, sem apagar sem ok); 8 skills do MLflow, do [mlflow/skills](https://github.com/mlflow/skills), e 5 de Obsidian, do [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) (ver [TERCEIROS.md](TERCEIROS.md)) |
 | `projetos/curso-lab-agent/` | só com `--projeto curso-lab-agent` | `constitution-interview`, `spec-feature`, `implementar-grupo`, `validate-feature`, `replan`, na versão do curso-lab |
 
 As skills de `projetos/` falam das regras de um repo específico (exam_map, Lakebase, F23…). Num
