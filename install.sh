@@ -58,8 +58,18 @@ if [ ${#destinos[@]} -eq 0 ]; then
   done
   if [ ${#destinos[@]} -eq 0 ]; then
     topo=$(git rev-parse --show-toplevel 2>/dev/null || true)
-    if [ -z "$topo" ] || [ "$(real "$topo")" = "$(real "$repo")" ]; then
-      echo "install: nenhuma pasta pessoal com escrita e nenhum repo de tarefa no diretório atual" >&2
+    if [ -n "$topo" ] && [ "$(real "$topo")" = "$(real "$repo")" ]; then topo=; fi
+    # A doc do Codex cloud não diz em que pasta o setup roda; o repo da tarefa fica em
+    # /workspace/<repo>. Fora de um repo, vale o único repo git dessa pasta.
+    if [ -z "$topo" ]; then
+      candidatos=()
+      for g in "${AGENT_SKILLS_WORKSPACE:-/workspace}"/*/.git; do
+        if [ -e "$g" ] && [ "$(real "${g%/.git}")" != "$(real "$repo")" ]; then candidatos+=("${g%/.git}"); fi
+      done
+      if [ ${#candidatos[@]} -eq 1 ]; then topo=${candidatos[0]}; fi
+    fi
+    if [ -z "$topo" ]; then
+      echo "install: nenhuma pasta pessoal com escrita e nenhum repo de tarefa no diretório atual nem em ${AGENT_SKILLS_WORKSPACE:-/workspace}" >&2
       exit 1
     fi
     destinos+=("$topo/.agents/skills")

@@ -160,6 +160,25 @@ def conferir_install() -> None:
             erros.append(f"install.sh: sujou o git status do repo da tarefa:\n{sujo}")
         shutil.rmtree(tarefa)
 
+        # Como no Codex cloud: HOME sem escrita, setup fora do repo, repo da tarefa no workspace.
+        workspace = Path(tmp) / "workspace"
+        tarefa = workspace / "repo-da-tarefa"
+        tarefa.mkdir(parents=True)
+        subprocess.run(["git", "init", "-q"], cwd=tarefa, check=True)
+        fora = Path(tmp) / "fora"
+        fora.mkdir()
+        os.environ["AGENT_SKILLS_WORKSPACE"] = str(workspace)
+        ro_home.chmod(0o555)
+        try:
+            rodar([], ro_home, cwd=fora)
+        finally:
+            ro_home.chmod(0o755)
+            del os.environ["AGENT_SKILLS_WORKSPACE"]
+        destino = tarefa / ".agents/skills"
+        instaladas = {p.name for p in destino.iterdir()} if destino.is_dir() else set()
+        if instaladas != gerais:
+            erros.append("install.sh: fora do repo, não achou o repo da tarefa no workspace")
+
 
 def main() -> int:
     conferir_skills()

@@ -102,6 +102,22 @@ def _yaml_simples(valor: str) -> bool:
     )
 
 
+def _skills_do_repo(pasta: Path) -> set[str]:
+    # Só as skills do repo: uma pasta que o git ignora (como as skills pessoais que o setup de um
+    # ambiente cloud instala ali e põe no .git/info/exclude) não é do projeto.
+    nomes = {item.name for item in pasta.iterdir() if item.is_dir()}
+    ignoradas = subprocess.run(
+        ["git", "check-ignore", "--no-index", *(f"{pasta.name}/{nome}/" for nome in nomes)],
+        cwd=pasta.parent,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if ignoradas.returncode > 1:  # fora de um repo git: vale a pasta inteira
+        return nomes
+    return nomes - {Path(linha).name for linha in ignoradas.stdout.split()}
+
+
 def test_constituicao_e_template_de_feature_existem():
     for nome in ("mission.md", "tech_stack.md", "roadmap.md"):
         assert (ROOT / "specs" / "constitution" / nome).is_file(), nome
@@ -132,7 +148,7 @@ def test_claude_importa_o_agents_uma_vez_sem_repetir_regras():
 
 def test_skills_do_fluxo_tem_metadados_e_usam_o_agents():
     pasta = ROOT / ".claude" / "skills"
-    nomes = {item.name for item in pasta.iterdir() if item.is_dir()}
+    nomes = _skills_do_repo(pasta)
     assert SKILLS <= nomes
     for nome in nomes:
         conteudo = (pasta / nome / "SKILL.md").read_text(encoding="utf-8")
