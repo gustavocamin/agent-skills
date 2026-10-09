@@ -17,12 +17,11 @@ a skill, mostre-a e diga que ela entra no repo pela máquina dele ou por um PR n
 
 ## Passos
 
-1. **Pública ou não.** O repo é público. Skill com dado pessoal (planos de vida, finanças,
-   saúde, pessoas, empregador, caminhos do vault, emails, hosts de workspace) não entra:
-   proponha um lugar privado (o repo do projeto, como o `second-brain` para o vault) ou uma
-   versão genérica.
+1. **Nada de segredo.** O repo é público e o Gustavo decidiu centralizar tudo nele, inclusive
+   o vault (09/10/2026). Segredo (token, chave, senha), email, host de workspace e id de conta
+   nunca entram; o `conferir.py` procura os tokens comuns.
 2. **Escrever** em `skills/<nome>/SKILL.md` no clone (específica de um projeto: em
-   `projetos/<projeto>/<nome>/`, e a fonte continua sendo o repo do projeto). Use a
+   `projetos/<projeto>/skills/<nome>/`; comando em `projetos/<projeto>/commands/`). Use a
    `skill-creator` para o formato e a descrição, se estiver disponível. Em português, como as
    outras; `name` em kebab-case igual ao nome da pasta; descrição com o que faz e quando usar,
    até 1024 caracteres.
@@ -39,6 +38,9 @@ a skill, mostre-a e diga que ela entra no repo pela máquina dele ou por um PR n
   faça os passos 4 e 5.
 - **Skill copiada (não link) numa máquina:** `bash scripts/sincronizar.sh` traz a versão local
   para o clone, ou `--nova <pasta>` para uma skill que o repo ainda não tem.
+- **Vault do Obsidian:** o `.claude/` do vault é link para `projetos/obsidian/`; editar ou
+  criar ali já é editar o clone. Item novo no vault: mova-o para `projetos/obsidian/` e rode
+  `bash install.sh --projeto obsidian --em "<vault>" --link`. Depois, os passos 4 e 5.
 - **Skill de projeto mudou** (ex.: curso-lab, `.claude/skills/`): `bash scripts/sincronizar.sh
   --projeto <projeto> <caminho do repo>` e os passos 4 e 5.
 - **Skill de terceiros** (`TERCEIROS.md`): não edite; copie de novo da origem num commit novo

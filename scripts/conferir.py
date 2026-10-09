@@ -1,7 +1,7 @@
 """Confere o repo de skills antes de um commit e no CI.
 
-- toda pasta de skills/ e projetos/<p>/ tem SKILL.md com frontmatter, name em kebab-case e
-  description de até 1024 caracteres;
+- toda pasta de skills/ e projetos/<p>/skills/ tem SKILL.md com frontmatter, name em kebab-case e
+  description de até 1024 caracteres; todo comando e agente de projetos/<p>/ tem description;
 - nenhum name se repete no mesmo conjunto de instalação (skills/ + um projeto);
 - toda skill de terceiros está listada no TERCEIROS.md, e o contrário;
 - nenhum token comum (Databricks, GitHub, Anthropic/OpenAI) em arquivo versionado;
@@ -72,14 +72,27 @@ def pastas(dir_: Path) -> list[Path]:
     return sorted(p for p in dir_.iterdir() if p.is_dir())
 
 
+def skills_do_projeto(projeto: Path) -> list[Path]:
+    dir_ = projeto / "skills"
+    return pastas(dir_) if dir_.is_dir() else []
+
+
 def conferir_skills() -> None:
     gerais = pastas(RAIZ / "skills")
     conferir_conjunto(gerais, "skills/")
     for projeto in pastas(RAIZ / "projetos"):
-        conferir_conjunto(gerais + pastas(projeto), f"skills/ + {projeto.relative_to(RAIZ)}")
-        repetidas = {p.name for p in gerais} & {p.name for p in pastas(projeto)}
+        rel = projeto.relative_to(RAIZ)
+        extras = {p.name for p in projeto.iterdir()} - {"skills", "commands", "agents", "README.md"}
+        if extras:
+            erros.append(f"{rel}: só skills/, commands/ e agents/ (sobrou {sorted(extras)})")
+        conferir_conjunto(gerais + skills_do_projeto(projeto), f"skills/ + {rel}/skills")
+        repetidas = {p.name for p in gerais} & {p.name for p in skills_do_projeto(projeto)}
         if repetidas:
-            erros.append(f"{projeto.relative_to(RAIZ)}: pasta com o mesmo nome de skills/: {sorted(repetidas)}")
+            erros.append(f"{rel}/skills: pasta com o mesmo nome de skills/: {sorted(repetidas)}")
+        for tipo in ("commands", "agents"):
+            for arquivo in sorted((projeto / tipo).glob("*.md")) if (projeto / tipo).is_dir() else []:
+                if not frontmatter(arquivo).get("description"):
+                    erros.append(f"{arquivo.relative_to(RAIZ)}: sem description no frontmatter")
 
     listadas = set(re.findall(r"^\| `([a-z0-9-]+)` \|", (RAIZ / "TERCEIROS.md").read_text(), re.M))
     for nome in listadas - {p.name for p in gerais}:
@@ -135,11 +148,26 @@ def conferir_install() -> None:
         if "edição local" in alvo.read_text():
             erros.append("install.sh: --forcar não substituiu a skill editada")
 
-        if projeto:
+        for projeto in pastas(RAIZ / "projetos"):
+            esperado = {
+                ".claude/skills": {p.name for p in skills_do_projeto(projeto)},
+                ".claude/commands": {p.name for p in projeto.glob("commands/*.md")},
+                ".claude/agents": {p.name for p in projeto.glob("agents/*.md")},
+            }
             rodar(["--projeto", projeto.name], home)
-            faltam = {p.name for p in pastas(projeto)} - {p.name for p in (home / ".claude/skills").iterdir()}
-            if faltam:
-                erros.append(f"install.sh --projeto {projeto.name}: faltaram {sorted(faltam)}")
+            for d, nomes in esperado.items():
+                faltam = nomes - ({p.name for p in (home / d).iterdir()} if (home / d).is_dir() else set())
+                if faltam:
+                    erros.append(f"install.sh --projeto {projeto.name}: faltaram em ~/{d}: {sorted(faltam)}")
+            # --em: os itens do projeto vão para a .claude/ da pasta, como links.
+            pasta = Path(tmp) / f"em-{projeto.name}"
+            pasta.mkdir()
+            rodar(["--projeto", projeto.name, "--em", str(pasta), "--link"], home)
+            for d, nomes in esperado.items():
+                alvo = pasta / d
+                achados = {p.name for p in alvo.iterdir() if p.is_symlink()} if alvo.is_dir() else set()
+                if achados != nomes:
+                    erros.append(f"install.sh --em: {d} de {projeto.name} ficou com {sorted(achados ^ nomes)} a mais ou a menos")
 
         # HOME sem escrita: instala no repo da tarefa, fora do git status.
         ro_home = Path(tmp) / "ro-home"

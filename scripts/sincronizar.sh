@@ -4,7 +4,7 @@
 # com --nova <caminho da pasta da skill> [--projeto <nome>].
 #
 #   bash scripts/sincronizar.sh                                   # skills/ ← ~/.claude/skills
-#   bash scripts/sincronizar.sh --projeto curso-lab-agent <repo>  # projetos/curso-lab-agent/ ← <repo>/.claude/skills
+#   bash scripts/sincronizar.sh --projeto curso-lab-agent <repo>  # projetos/curso-lab-agent/ ← <repo>/.claude/{skills,commands,agents}
 #   bash scripts/sincronizar.sh --nova ~/.claude/skills/minha-skill
 #
 # As skills de terceiros (TERCEIROS.md) não vêm da máquina: atualizam-se pelo repo de origem.
@@ -37,14 +37,22 @@ case ${1:-} in
     fonte=${3:?--projeto pede o caminho do repo do projeto}
     mkdir -p "$repo/projetos/$nome"
     for dir in "$fonte"/.claude/skills/*/; do
-      copiar "${dir%/}" "$repo/projetos/$nome/$(basename "$dir")"
+      [ -L "${dir%/}" ] && continue  # link para este repo: já é a fonte
+      [ -d "$dir" ] && copiar "${dir%/}" "$repo/projetos/$nome/skills/$(basename "$dir")"
+    done
+    for tipo in commands agents; do
+      for f in "$fonte/.claude/$tipo"/*.md; do
+        [ -f "$f" ] && [ ! -L "$f" ] || continue
+        mkdir -p "$repo/projetos/$nome/$tipo"
+        cp "$f" "$repo/projetos/$nome/$tipo/" && echo "sincronizar: projetos/$nome/$tipo/$(basename "$f") ← $f"
+      done
     done
     ;;
   --nova)
     origem=${2:?--nova pede a pasta da skill}
     origem=${origem%/}
     if [ "${3:-}" = --projeto ]; then
-      alvo="$repo/projetos/${4:?--projeto pede um nome}/$(basename "$origem")"
+      alvo="$repo/projetos/${4:?--projeto pede um nome}/skills/$(basename "$origem")"
     else
       alvo="$repo/skills/$(basename "$origem")"
     fi

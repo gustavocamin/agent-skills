@@ -8,11 +8,18 @@ no setup de qualquer ambiente cloud (Claude Code na web, Codex cloud).
 | Pasta | Quando entra | Skills |
 | --- | --- | --- |
 | `skills/` | sempre | `iniciar-projeto` (cria um projeto no fluxo spec-first), `skill-pessoal` (cria ou muda uma skill deste repo), `liberar-disco` (mede o disco e propõe o que limpar, sem apagar sem ok); 8 skills do MLflow, do [mlflow/skills](https://github.com/mlflow/skills), e 5 de Obsidian, do [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) (ver [TERCEIROS.md](TERCEIROS.md)) |
+| `projetos/obsidian/` | só com `--projeto obsidian` | o `.claude/` do vault (`00. Obsidian`): 5 skills (`analysis`, `daily-operations`, `output-maintenance`, `thinking-tools`, `vault-automation`), 38 comandos (`/today`, `/close-day`, `/week`, `/triage-inbox`, `/study-loop`…) e o agente `vault-auditor` |
 | `projetos/curso-lab-agent/` | só com `--projeto curso-lab-agent` | `constitution-interview`, `spec-feature`, `implementar-grupo`, `validate-feature`, `replan`, na versão do curso-lab |
 
-As skills de `projetos/` falam das regras de um repo específico (exam_map, Lakebase, F23…). Num
-projeto novo, use as versões genéricas que a `iniciar-projeto` gera dentro dele. No próprio
-curso-lab, elas já vêm do repo (`.claude/skills`); a cópia daqui é referência.
+Cada pasta de `projetos/` espelha o `.claude/` de um projeto: `skills/`, `commands/` e
+`agents/`. Elas falam das regras e das pastas daquele projeto, por isso não entram por padrão.
+
+- **Vault do Obsidian:** a fonte é este repo. Na máquina, o `.claude/skills`, `commands` e
+  `agents` do vault são links para o clone (`install.sh --projeto obsidian --em "<vault>" --link`),
+  então editar um comando no vault é editar o repo.
+- **curso-lab:** a fonte continua sendo o repo do curso-lab (`.claude/skills`), porque o cloud
+  dele lê de lá; a cópia daqui se atualiza com o `scripts/sincronizar.sh`. Num projeto novo, use
+  as versões genéricas que a `iniciar-projeto` gera dentro dele.
 
 ## Instalar
 
@@ -25,7 +32,10 @@ git clone https://github.com/gustavocamin/agent-skills && bash agent-skills/inst
 - Rodado de novo, só atualiza o que mudou. Uma skill que já existe com outro conteúdo fica como
   está e aparece no resumo; `--forcar` a substitui.
 - `--link` cria links para o clone em vez de cópias: a máquina local passa a usar o repo como
-  fonte. `--destino <pasta>` instala só ali. `--projeto <nome>` soma uma pasta de `projetos/`.
+  fonte. `--destino <pasta>` instala as skills só ali.
+- `--projeto <nome>` soma uma pasta de `projetos/`: as skills vão para as pastas de skills, e os
+  comandos e agentes para `~/.claude/commands` e `~/.claude/agents`. Com `--em <pasta>`, tudo
+  do projeto vai para `<pasta>/.claude/`.
 
 ### No setup de um ambiente cloud
 
