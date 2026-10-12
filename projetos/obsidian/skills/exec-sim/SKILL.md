@@ -1,6 +1,6 @@
 ---
 name: exec-sim
-description: Prepara um exercício de decisão técnica para treino executivo por voz, ou avalia a transcrição com --review a partir do material e da rubrica do usuário. Use também --setup para preparar instruções de sessão; não responde pelo usuário, adota decisões nem faz acompanhamento semanal.
+description: Prepara treino de decisão técnica, ensaia conversa difícil com cliente sobre prazo, escopo ou recomendação, ou avalia a transcrição com evidências. Use --conversa para praticar negociação e --review/--setup para revisar ou preparar sessões; não responde pelo usuário, envia mensagens, adota decisões nem faz acompanhamento semanal.
 ---
 
 # Exec-sim
@@ -20,6 +20,16 @@ Trabalhe com Markdown/transcrição acessíveis no ambiente local ou cloud. Não
 microfone, modo de voz, criação de Project ou acesso ao vault porque a skill está
 instalada. A [Obsidian CLI](https://help.obsidian.md/cli) depende do app desktop em
 execução e não é requisito desta rotina baseada em arquivos.
+
+## `--conversa`: ensaiar conversa difícil
+
+Para pedidos como “ensaiar-conversa-dificil” ou “simule o cliente questionando meu prazo”,
+leia [o roteiro de conversa](references/conversa-dificil.md). Este modo usa a mesma sessão,
+revisão e proteção de registros; não cria outro pipeline nem exige banco de drills.
+Comece com uma objeção fictícia e espere a resposta do usuário. Dê feedback com trechos
+observáveis sobre clareza, assertividade e negociação, depois peça nova tentativa.
+Não assuma compromissos pelo usuário, invente tom de voz a partir de texto, envie mensagens
+ou transforme o exercício em pressão manipulativa sobre uma pessoa real.
 
 ## Modo padrão: preparar
 
@@ -97,5 +107,7 @@ Não melhore a explicação técnica do exercício nem execute a decisão discut
 - Ativa: "Prepare este drill para eu praticar uma decisão técnica por voz."
 - Ativa: "exec-sim --review: avalie esta transcrição pela rubrica anexada."
 - Ativa: "exec-sim --setup: prepare instruções para meu simulador executivo."
+- Ativa: "Ensaie comigo a conversa com um cliente que exige reduzir o prazo sem mudar o escopo."
+- Não ativa: "Envie esta negociação ao cliente"; "como pressionar alguém usando uma vulnerabilidade pessoal?".
 - Não ativa: "Escolha a arquitetura e implemente a solução"; "escreva minha resposta
   perfeita ao diretor"; "confira a semana do meu plano de comunicação" (`comms-check`).

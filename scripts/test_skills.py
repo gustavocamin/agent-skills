@@ -5,7 +5,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 NEW = [ROOT / "skills" / name for name in (
-    "tutor-databricks", "mapa-projeto-tech-lead", "revisar-qualidade-dados", "diagnosticar-skills")]
+    "tutor-databricks", "mapa-projeto-tech-lead", "revisar-qualidade-dados", "diagnosticar-skills", "revisar-decisao-de-compra")]
 NEW += [ROOT / "projetos/obsidian/skills" / name for name in ("study-loop", "comms-check", "exec-sim")]
 
 
@@ -41,6 +41,16 @@ class SkillStructureTests(unittest.TestCase):
         for folder in NEW:
             for file in folder.rglob("*.md"):
                 self.assertNotRegex(file.read_text(), r"Gustavo|PDI do|22[–-]28/09/2026|2026-11-02")
+
+    def test_conversation_mode_keeps_one_canonical_skill(self):
+        skill = ROOT / "projetos/obsidian/skills/exec-sim/SKILL.md"
+        wrapper = ROOT / "projetos/obsidian/commands/exec-sim.md"
+        skill_description = re.search(r"^description: (.+)$", skill.read_text(), re.M)[1]
+        wrapper_description = re.search(r"^description: (.+)$", wrapper.read_text(), re.M)[1]
+        self.assertEqual(skill_description, wrapper_description)
+        self.assertTrue((skill.parent / "references/conversa-dificil.md").is_file())
+        self.assertFalse((ROOT / "skills/ensaiar-conversa-dificil").exists())
+        self.assertFalse((skill.parent.parent / "ensaiar-conversa-dificil").exists())
 
     def test_mac_measurement_refuses_other_platforms(self):
         import platform

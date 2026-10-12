@@ -18,6 +18,12 @@ Novas skills próprias:
 - `mapa-projeto-tech-lead`: mapa de um projeto existente em oito dimensões, com evidências e lacunas.
 - `revisar-qualidade-dados`: regra de negócio, métrica, limiar, testes, exceções e reprocessamento.
 - `diagnosticar-skills`: comparação read-only entre fonte, hashes, baseline e instalação.
+- `revisar-decisao-de-compra`: necessidade, custo total, compatibilidade, evidências e alternativas,
+  incluindo esperar ou não comprar; pesquisa e decisão, sem checkout automático.
+
+No pacote Obsidian, `exec-sim --conversa` (ensaiar-conversa-dificil) treina conversas com
+clientes sobre prazo, escopo e recomendações, com tentativa, feedback e nova tentativa.
+O modo usa o fluxo e o relatório existentes; não envia mensagens nem cria compromissos.
 
 O preparo de decisão técnica está integrado ao handoff, implementação e validação existentes:
 racional, impacto de negócio, custo, risco, operação, reversibilidade e alternativas rejeitadas.
