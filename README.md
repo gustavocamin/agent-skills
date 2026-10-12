@@ -1,84 +1,146 @@
 # agent-skills
 
-As skills do Gustavo para o Claude Code e o Codex, num só lugar, para instalar na máquina local e
-no setup de qualquer ambiente cloud (Claude Code na web, Codex cloud).
+Skills compartilhadas para Claude Code e Codex. A instalação distribui arquivos; não instala
+CLIs, MCPs, credenciais ou serviços e não garante que um runtime carregou uma skill.
 
-## O que tem
+## Catálogo e fonte
 
-| Pasta | Quando entra | Skills |
-| --- | --- | --- |
-| `skills/` | sempre | `iniciar-projeto` (cria um projeto no fluxo spec-first), `skill-pessoal` (cria ou muda uma skill deste repo), `liberar-disco` (mede o disco e propõe o que limpar, sem apagar sem ok); 8 skills do MLflow, do [mlflow/skills](https://github.com/mlflow/skills), e 5 de Obsidian, do [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) (ver [TERCEIROS.md](TERCEIROS.md)) |
-| `projetos/obsidian/` | só com `--projeto obsidian` | o `.claude/` do vault (`00. Obsidian`): 5 skills (`analysis`, `daily-operations`, `output-maintenance`, `thinking-tools`, `vault-automation`), 38 comandos (`/today`, `/close-day`, `/week`, `/triage-inbox`, `/study-loop`…) e o agente `vault-auditor` |
-| `projetos/curso-lab-agent/` | só com `--projeto curso-lab-agent` | `constitution-interview`, `spec-feature`, `implementar-grupo`, `validate-feature`, `replan`, na versão do curso-lab |
+| Conjunto | Uso |
+| --- | --- |
+| `skills/` | Skills gerais próprias e de terceiros; instaladas por padrão |
+| `projetos/obsidian/skills/` | Workflows de vault, inclusive `study-loop`, `comms-check` e `exec-sim` portáveis |
+| `projetos/obsidian/commands/`, `agents/` | Adaptadores e agentes **exclusivos do Claude Code** |
+| `projetos/databricks/skills/` | 34 skills oficiais Databricks, opt-in com `--projeto databricks` |
+| `projetos/curso-lab-agent/skills/` | Fluxo específico de especificação, implementação e validação do curso-lab |
 
-Cada pasta de `projetos/` espelha o `.claude/` de um projeto: `skills/`, `commands/` e
-`agents/`. Elas falam das regras e das pastas daquele projeto, por isso não entram por padrão.
+Novas skills próprias:
+- `tutor-databricks`: tentativa do aluno, dica incremental, diagnóstico, nova tentativa e transferência.
+- `mapa-projeto-tech-lead`: mapa de um projeto existente em oito dimensões, com evidências e lacunas.
+- `revisar-qualidade-dados`: regra de negócio, métrica, limiar, testes, exceções e reprocessamento.
+- `diagnosticar-skills`: comparação read-only entre fonte, hashes, baseline e instalação.
+- `revisar-decisao-de-compra`: necessidade, custo total, compatibilidade, evidências e alternativas,
+  incluindo esperar ou não comprar; pesquisa e decisão, sem checkout automático.
 
-- **Vault do Obsidian:** a fonte é este repo. Na máquina, o `.claude/skills`, `commands` e
-  `agents` do vault são links para o clone (`install.sh --projeto obsidian --em "<vault>" --link`),
-  então editar um comando no vault é editar o repo.
-- **curso-lab:** a fonte continua sendo o repo do curso-lab (`.claude/skills`), porque o cloud
-  dele lê de lá; a cópia daqui se atualiza com o `scripts/sincronizar.sh`. Num projeto novo, use
-  as versões genéricas que a `iniciar-projeto` gera dentro dele.
+No pacote Obsidian, `exec-sim --conversa` (ensaiar-conversa-dificil) treina conversas com
+clientes sobre prazo, escopo e recomendações, com tentativa, feedback e nova tentativa.
+O modo usa o fluxo e o relatório existentes; não envia mensagens nem cria compromissos.
 
-## Instalar
+O preparo de decisão técnica está integrado ao handoff, implementação e validação existentes:
+racional, impacto de negócio, custo, risco, operação, reversibilidade e alternativas rejeitadas.
+Não há uma segunda skill de decisão, revisão semanal ou simulação executiva.
+
+O pacote Databricks é opcional (`bash install.sh --projeto databricks --dry-run`) e está
+fixado no commit `c1964266c7aa6063d89036691d0594420ffa0129`. Sua licença é restrita a uso
+com os serviços Databricks; cada skill mantém LICENSE/NOTICE. Não instalamos ferramentas,
+MCPs ou autenticação. Veja [instruções e dependências](projetos/databricks/README.md).
+
+`TERCEIROS.md` identifica origens, versões e licenças. Skills de terceiros não são editadas
+localmente. Para o curso-lab, a fonte das cinco skills continua sendo seu próprio repositório;
+esta cópia central e qualquer correção pendente de upstream precisam ser reconciliadas antes
+de rodar `scripts/sincronizar.sh`, para não perder mudanças.
+
+## Instalar e escolher o agente
+
+Requisitos do instalador: Bash, Python 3.10+ e Git. Execute primeiro o dry-run:
 
 ```bash
-git clone https://github.com/gustavocamin/agent-skills && bash agent-skills/install.sh
+git clone https://github.com/gustavocamin/agent-skills
+cd agent-skills
+bash install.sh --dry-run
+bash install.sh
 ```
 
-- Instala em `~/.claude/skills` (Claude Code) e `~/.agents/skills` (Codex, pasta pessoal da doc
-  atual). Pasta sem escrita é pulada.
-- Rodado de novo, só atualiza o que mudou. Uma skill que já existe com outro conteúdo fica como
-  está e aparece no resumo; `--forcar` a substitui.
-- `--link` cria links para o clone em vez de cópias: a máquina local passa a usar o repo como
-  fonte. `--destino <pasta>` instala as skills só ali.
-- `--projeto <nome>` soma uma pasta de `projetos/`: as skills vão para as pastas de skills, e os
-  comandos e agentes para `~/.claude/commands` e `~/.claude/agents`. Com `--em <pasta>`, tudo
-  do projeto vai para `<pasta>/.claude/`.
+- Padrão: skills gerais em `~/.claude/skills` e `~/.agents/skills`.
+- `--agente claude`, `--agente codex` ou `--agente ambos` (padrão) seleciona o agente.
+- `--destino "<pasta de skills>"` usa um destino explícito; pode repetir.
+- `--projeto obsidian` ou `--projeto curso-lab-agent` inclui o conjunto escolhido.
+- `--projeto obsidian --em "<vault>"` instala skills do projeto em `.claude/skills` e
+  `.agents/skills` conforme o agente. Comandos/agentes entram só em `.claude/` quando Claude
+  está selecionado. `--em` não significa que o Codex execute comandos ou agentes Claude.
+- `--link` aponta diretamente para o clone. Editar um item instalado assim modifica a fonte;
+  mantenha o clone no mesmo lugar. Trocar cópia/link exige revisão explícita.
+- `--dry-run` descreve o plano sem criar pastas, manifestos, backups ou exclusões Git.
 
-### No setup de um ambiente cloud
-
-Cole no começo do script de setup do ambiente e, no Codex cloud, também no script de manutenção
-(o repo é público, então não precisa de token):
+Exemplo apenas Codex, sem adaptadores Claude:
 
 ```bash
-# agent-skills: skills pessoais (github.com/gustavocamin/agent-skills)
-(
-  d="${TMPDIR:-/tmp}/agent-skills"
-  if [ -d "$d/.git" ]; then
-    git -C "$d" pull -q --ff-only
-  else
-    git clone -q --depth 1 https://github.com/gustavocamin/agent-skills "$d"
-  fi
-  bash "$d/install.sh"
-) || echo "agent-skills: instalação falhou; a tarefa segue sem as skills pessoais"
+bash install.sh --agente codex --projeto obsidian --em "<vault>" --dry-run
 ```
 
-- **Claude Code na web:** em claude.ai/code, no ambiente → script de setup. Precisa de acesso
-  de rede que alcance o github.com (o nível **Trusted** padrão alcança).
-- **Codex cloud:** no ambiente → script de setup e script de manutenção (este roda quando um
-  contêiner em cache, de até 12 h, é retomado; sem ele, a tarefa usa as skills do dia do setup).
-  O setup tem internet; a fase do agente, por padrão, não. Com o HOME sem escrita (observado no
-  curso-lab em 08/10/2026), o instalador cai para `.agents/skills` do repo da tarefa (o do
-  diretório atual ou, fora dele, o único repo em `/workspace`) e põe cada pasta no
-  `.git/info/exclude`: o Codex enxerga as skills e o `git status` fica limpo. O Codex só procura
-  skills do diretório atual até a raiz do repo, então não há pasta fora do repo que sirva.
-  Skill com o mesmo nome de uma do repo não é tocada.
-- **Testes do repo da tarefa:** um teste que lista `.claude/skills` ou `.agents/skills` precisa
-  ignorar o que o git ignora, ou vai conferir as skills pessoais como se fossem do projeto. Os
-  projetos da `iniciar-projeto` já fazem isso (`_skills_do_repo` no `tests/test_processo.py`).
+## Atualização segura
 
-Para fixar uma versão, troque o clone por `git clone ... && git -C "$d" checkout <commit>`.
+```bash
+git pull --ff-only
+git log -5 --oneline
+bash install.sh --dry-run
+# Revise o diff da fonte e os itens propostos antes de aplicar:
+bash install.sh
+```
 
-## Manter
+O instalador mantém proveniência e hash da última cópia instalada num manifesto irmão do
+destino. Se a instalação segue igual à baseline, a nova fonte pode atualizar automaticamente.
+Se há edição local, origem diferente ou item divergente sem proveniência, ele preserva e
+informa o conflito. Cópias antigas iguais à fonte podem ser adotadas sem reescrever conteúdo.
 
-- Mudou uma skill na máquina: `bash scripts/sincronizar.sh` traz `~/.claude/skills` para
-  `skills/`; `bash scripts/sincronizar.sh --projeto curso-lab-agent <caminho do repo>` traz as do
-  projeto. Skill nova: `bash scripts/sincronizar.sh --nova <pasta da skill>`.
-- Com `install.sh --link` na máquina local, a edição já acontece no clone, e não precisa
-  sincronizar.
-- Antes do commit: `python3 scripts/conferir.py` (o CI roda o mesmo). Ele confere o frontmatter,
-  nomes repetidos, tokens vazados e o `install.sh` num HOME vazio, num HOME só de leitura e com
-  uma skill editada.
-- Este repo é público: nada de segredo, email, host de workspace ou dado pessoal nas skills.
+`--forcar` permite substituir itens conflitantes com backup, exceto proteções de arquivos
+versionados e caminhos inseguros. Revise o caminho do backup informado antes de qualquer
+limpeza; ele não é removido automaticamente. Não use `--forcar` no setup automático para
+“resolver” conflitos. Itens removidos da fonte não são apagados automaticamente da instalação.
+
+Manifestos/backups ficam ao lado da pasta de destino em `.agent-skills-<nome-do-destino>/`.
+Não edite a baseline para ocultar diferenças. Ela registra estado local, não é assinatura
+criptográfica de confiança no upstream.
+
+Para diagnóstico sem alteração:
+
+```bash
+python3 skills/diagnosticar-skills/scripts/diagnosticar.py \
+  --repo . --agente codex --destino "<pasta>/.agents/skills" --json
+```
+
+## Ambiente cloud e limites
+
+No setup, clone ou atualize a fonte e rode o instalador com o agente correto. Fixe um commit
+revisado para reprodutibilidade. A rede precisa permitir GitHub; não embuta tokens no script.
+Com HOME sem escrita, o instalador pode usar o repositório de tarefa encontrado no diretório
+atual ou o único repositório elegível no workspace. Instala ali sem sobrescrever skills
+versionadas e adiciona apenas itens novos a `.git/info/exclude`. Em ambiente ambíguo, use
+`--destino` explicitamente. A seleção de escopo e precedência depende do runtime; valide em
+uma sessão nova, não confunda sucesso da cópia com carregamento confirmado.
+
+Compatibilidade observável:
+- Claude Code usa `.claude/skills` e seus adaptadores `commands/agents`.
+- Codex usa `.agents/skills`; invoque `study-loop`, `comms-check` e `exec-sim` como skills.
+  Os demais wrappers Claude não são comandos Codex; suas skills canônicas continuam disponíveis.
+- `obsidian-cli` requer o aplicativo desktop aberto. Não funciona num container só por haver
+  uma cópia da skill. Workflows por arquivos precisam de um vault acessível e autorizado.
+- `liberar-disco` é específico do Mac e recusa Linux; o disco do cloud não é o do usuário.
+- Skills MLflow exigem suas ferramentas e acesso ao serviço, não provisionados aqui.
+- Duas pastas MLflow preservam nomes diferentes no frontmatter upstream:
+  `analyze-mlflow-chat-session` → `analyzing-mlflow-session` e
+  `analyze-mlflow-trace` → `analyzing-mlflow-trace`. O checker avisa; carregamento nos
+  runtimes não foi validado. As novas skills seguem nome igual à pasta.
+- Nenhuma verificação local deste repo prova suporte completo de Claude/Codex/Obsidian ao vivo.
+
+Caminhos oficiais: [Claude Code](https://code.claude.com/docs/en/skills),
+[Codex](https://developers.openai.com/codex/skills/) e
+[formato Agent Skills](https://agentskills.io/specification).
+
+## Manter e testar
+
+```bash
+python3 scripts/conferir.py
+python3 -m unittest discover -s scripts -p 'test_*.py' -v
+python3 skills/iniciar-projeto/scripts/autoteste.py
+```
+
+Os testes usam HOME e projetos temporários: instalação nova, idempotência, atualização gerenciada,
+preservação local, backups, dry-run, links, caminhos com espaços, seleção de agente e diagnóstico
+read-only. Testes estruturais verificam frontmatter e referências; exemplos de acionamento
+positivo/negativo estão nas referências das novas skills. Avaliação do comportamento do modelo
+continua necessária; esses testes não simulam um runtime completo.
+
+`bash scripts/sincronizar.sh` importa cópias locais; revise seu diff antes de publicar. Com
+`--link`, edições já alteram o clone. Não rode instalação real, push, PR ou merge sem a
+autorização correspondente. Este repositório é público: exemplos devem ser genéricos, sem
+planos privados, pessoas, contas, clientes, segredos ou prazos pessoais.

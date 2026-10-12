@@ -14,6 +14,20 @@ Implemente o Grupo N da Fxx conforme a spec aprovada. O `AGENTS.md` é a fonte d
 3. Se o grupo consome um contrato, leia o validador de quem produz antes de usar o formato. Se define um contrato, escreva o formato de cada pedido e de cada resposta ao lado do código e crie o teste que passa os exemplos de quem consome pelo validador.
 4. Num grupo ⚠, confira conta, login e o estado do ambiente antes do primeiro comando ⚠. Se o recurso que o grupo cria já existe, pare e pergunte.
 
+## Justificativa durante a implementação
+
+Leia no `plan.md` a explicação e o estado das escolhas relevantes aprovadas. Para
+uma nova escolha que mude impacto no negócio, custo, risco, operação ou
+reversibilidade, exponha a decisão e as alternativas antes de adotá-la. Peça ao
+dono humano sua explicação e confirmação; não transforme sua própria recomendação
+em fala ou aceite dele. Detalhes de execução já cobertos pela spec continuam no
+fluxo normal. Justificativa ausente fica [A CONFIRMAR], sem inventar uma razão.
+
+Registre nos caminhos permitidos pelo `Toca`, ou envie a proposta a quem integra.
+Compare alternativa escolhida, alternativas rejeitadas (inclusive não mudar),
+impacto esperado e observado, premissas de custo, risco, operação e limites de
+reversão. Não crie uma skill adicional para esse registro.
+
 ## Durante o trabalho
 
 - Mexa só nos caminhos do `Toca` do grupo. Atualize spec e código juntos; um detalhe decidido na implementação entra no grupo do `plan.md` ("Decidido na implementação: …"). Marque os checkboxes do grupo no `plan.md` à medida que fecham.
@@ -42,7 +56,7 @@ Feito: …
 Contrato: <formatos definidos ou usados; validador conferido> (ou "não toca contrato")
 Testes: …
 Mutações: <teste> ← <mutação> (falhou)
-Evidência: <onde ficam no repo as provas citadas; o que você observou e o que foi relatado, com commit ou hash>
+Evidência: <onde ficam no repo as provas citadas; o que você observou e o que foi relatado, com commit ou hash>; <referência à decisão e à explicação do dono humano, ou não se aplica com motivo>
 CI: <run> verde
 Desvios da spec: <diff comparado com Interfaces e Requisitos, item por item> (ou "nenhum")
 ```
