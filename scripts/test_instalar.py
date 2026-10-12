@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import shlex
 import stat
 import subprocess
 import sys
@@ -327,10 +328,35 @@ class InstallerTests(unittest.TestCase):
         target.mkdir(parents=True)
         (target / 'SKILL.md').write_text('conteúdo versionado do usuário')
         self.git('add', '.')
+        # Erro determinístico: o hook interno do Git não funciona em toda versão/CI.
+        binaries = self.base / 'git ownership fixture'
+        binaries.mkdir()
+        (binaries / 'python3').symlink_to(sys.executable)
+        git = binaries / 'git'
+        git.write_text(
+            '#!' + BASH + '\n'
+            'if [ "$3" = rev-parse ] && [ "$4" = --show-toplevel ]; then\n'
+            "  printf '%s\\n' \"fatal: detected dubious ownership in repository at '$2'\" >&2\n"
+            '  exit 128\n'
+            'fi\n'
+            'exec ' + shlex.quote(GIT) + ' "$@"\n'
+        )
+        git.chmod(0o755)
         before = self.snapshot(self.project)
         result = self.run_install('--destino', target.parent, '--forcar',
-                                  env={'GIT_TEST_ASSUME_DIFFERENT_OWNER': '1'}, expected=1)
+                                  env={'PATH': str(binaries)}, expected=1)
         self.assertIn('dubious ownership', result.stderr)
+        self.assertEqual(before, self.snapshot(self.project))
+
+    def test_real_git_preserves_tracked_target_with_force(self):
+        self.make_project()
+        target = self.project / '.agents/skills/exemplo'
+        target.mkdir(parents=True)
+        (target / 'SKILL.md').write_text('conteúdo versionado do usuário')
+        self.git('add', '.')
+        before = self.snapshot(self.project)
+        result = self.run_install('--destino', target.parent, '--forcar')
+        self.assertIn('arquivo do projeto versionado; nunca substituído', result.stdout)
         self.assertEqual(before, self.snapshot(self.project))
 
     def test_inherited_git_paths_do_not_bypass_tracking(self):
