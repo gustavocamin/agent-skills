@@ -17,6 +17,16 @@ Não escreva código nesta skill. O produto é a spec.
    - requisitos: comportamento observável esperado;
    - validação: como ele vai saber que ficou bom (automático e humano);
    - riscos: segredos, custo, limites da Free Edition, invariantes do `AGENTS.md` afetados.
+
+   Para uma escolha técnica relevante, peça a explicação do dono humano nas próprias
+   palavras: impacto no negócio, custo inicial e recorrente, risco, operação,
+   reversibilidade e alternativas rejeitadas (inclusive não mudar). Reutilize uma
+   explicação já registrada com a fonte; não a reescreva como se fosse dele. Sem
+   resposta, marque [A CONFIRMAR]. Recomendações do agente ficam como propostas.
+   Registre a justificativa e o estado da decisão no `plan.md`, e a conferência humana
+   correspondente no `validation.md`. A análise não autoriza adoção automática nem
+   substitui a aprovação da spec ou de operações sensíveis.
+
    Não pergunte o que a constituição já responde.
 5. Crie `specs/features/Fxx-<nome-curto>/` a partir de `specs/features/_template/` e preencha os três arquivos. O template é somente leitura: um arquivo copiado herda isso, então libere a escrita só nos arquivos novos. Nível de detalhe: muito contexto de objetivo, público e restrições; pouco micromanagement de implementação. Tarefas em grupos implementáveis sozinhos; marque ⚠ os que tocam segredos, workspace Databricks ou `exam_map`.
    - **Dono por grupo:** proponha `Dono: Claude Code`, `Dono: Codex (cloud)` (o padrão para grupo do Codex sem ⚠) ou `Dono: Codex` (local, para grupo ⚠ ou quando o cloud não servir) na linha logo abaixo do título de cada grupo, com `Branch` quando o grupo roda fora da branch da feature e `Toca` em todo grupo quando o plano tem os dois donos. O formato e o protocolo estão no `AGENTS.md` (seção "Dois agentes").

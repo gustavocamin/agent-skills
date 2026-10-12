@@ -1,13 +1,15 @@
 ---
 name: liberar-disco
-description: Mede o disco do Mac e propõe o que liberar — caches que se refazem, worktrees e cópias de tarefas de agentes já mescladas, node_modules e venvs de projetos parados, temporários antigos — sem apagar nada sem o ok do Gustavo. Use quando o disco estiver cheio ou quase (menos de 15 GB livres), quando uma ferramenta falhar por falta de espaço (iCloud que não baixa, npm, pip, git, worktree recusada), antes de abrir worktrees em paralelo, ou quando ele pedir para limpar ou liberar espaço.
+metadata:
+  compatibility: macOS, Bash, ferramentas locais de disco e acesso autorizado ao computador alvo.
+description: Mede o disco do Mac e propõe o que liberar — caches que se refazem, worktrees e cópias de tarefas de agentes já mescladas, node_modules e venvs de projetos parados, temporários antigos — sem apagar nada sem o ok do usuário. Use quando o disco estiver cheio ou quase (menos de 15 GB livres), quando uma ferramenta falhar por falta de espaço (iCloud que não baixa, npm, pip, git, worktree recusada), antes de abrir worktrees em paralelo, ou quando ele pedir para limpar ou liberar espaço.
 ---
 
 # Liberar disco
 
-O Mac do Gustavo vive perto do limite (228 GB, com 1 a 6 GB livres em outubro de 2026). Disco
-cheio já esvaziou `.git`, venv e `node_modules` pelo iCloud, travou o vitest e fez o setup de
-worktree do Codex recusar. Esta skill mede, propõe e só apaga o que ele aprovar, item por item.
+Esta skill é específica de macOS e deve medir o computador alvo autorizado. Não confunda
+um container Linux com o Mac do usuário. Sem acesso ao Mac, apresente o comando para ele
+executar e marque a medição como não realizada. O script recusa outros sistemas.
 
 ## Passos
 
@@ -29,7 +31,7 @@ worktree do Codex recusar. Esta skill mede, propõe e só apaga o que ele aprova
      pasta de scratchpad da sessão atual.
    - **Projetos parados:** `node_modules` e venvs de projetos sem commit há mais de 30 dias. Diga
      o comando que os refaz (`npm ci`, `pip install -e ".[dev]"`).
-   - **Só o Gustavo faz:** lixeira, Downloads, fotos, simuladores do iOS (`xcrun simctl delete
+   - **Só o usuário faz:** lixeira, Downloads, fotos, simuladores do iOS (`xcrun simctl delete
      unavailable` ele pode rodar), Docker, apps grandes, snapshots do Time Machine. Liste com o
      tamanho; não apague.
 3. **Propor** uma tabela única: item, tamanho, grupo, o que se perde, comando. Some o total por
@@ -40,13 +42,13 @@ worktree do Codex recusar. Esta skill mede, propõe e só apaga o que ele aprova
 
 ## Nunca
 
-- Apagar nada sem o ok explícito do Gustavo nesta conversa; o ok de uma limpeza anterior não vale.
+- Apagar nada sem o ok explícito do usuário nesta conversa; o ok de uma limpeza anterior não vale.
 - Esvaziar a lixeira, mexer em `~/Documents` fora de `node_modules`, venvs e worktrees de
   agentes, ou em `~/Library` fora de `Caches` e `Developer/Xcode/DerivedData`.
 - Ler ou varrer pastas do iCloud sem `.nosync` no caminho atrás de arquivos grandes: a leitura
   baixa de volta o que o iCloud tinha esvaziado e piora o disco.
 - Usar `rm` numa worktree registrada no git, num `.git`, na venv ou no `node_modules` do
-  checkout principal de um projeto ativo (o curso-lab, por exemplo), ou em segredos
+  checkout principal de um projeto ativo (definido pelo usuário), ou em segredos
   (`~/.config/<projeto>/`, `.env`).
 - Mexer em `~/.claude`, `~/.codex` (fora de `worktrees/`), `~/.agents` ou nos clones de
   `agent-skills`.

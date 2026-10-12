@@ -12,7 +12,8 @@ set -uo pipefail
 if [ "$(uname -s)" = Darwin ]; then
   df -h /System/Volumes/Data 2>/dev/null | tail -1 | awk '{print "disco: " $4 " livres de " $2 " (" $5 " usados)"}'
 else
-  df -h "$HOME" | tail -1 | awk '{print "disco: " $4 " livres de " $2 " (" $5 " usados)"}'
+  echo "medir: esta skill requer macOS; não mede o Mac a partir de um container Linux" >&2
+  exit 2
 fi
 echo
 

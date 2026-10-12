@@ -7,6 +7,21 @@ description: Roda a validação de uma feature implementada contra o validation.
 
 Quem roda esta skill é quem integra a feature: o agente da linha `Integra` do `plan.md`, o Claude Code se ela faltar (protocolo no `AGENTS.md`).
 
+## Conferir a justificativa existente
+
+Quando a feature tiver escolha técnica relevante, confira o registro no `plan.md`
+e a referência em `Evidência` do handoff: estado da decisão, explicação nas próprias
+palavras do dono humano, impacto no negócio, custo, risco, operação,
+reversibilidade e alternativas rejeitadas. Separe o que foi observado do que é
+estimativa ou promessa. Ausência de justificativa, confirmação ou evidência vira
+pendência no `validation.md`, não uma explicação escrita pelo agente.
+
+Prepare a pergunta ou verificação humana necessária sem respondê-la pelo dono.
+Não marque aceite por inferência nem adote uma alternativa porque a análise a
+favoreceu. Se o diff mudou os motivos ou limites de uma escolha, apresente a
+divergência para decisão antes do fechamento. Sem escolha relevante, registre
+"não se aplica" com motivo; não invente uma decisão para completar o checklist.
+
 ## Passos
 
 1. Leia `specs/features/Fxx-*/` (plan, requirements, validation) e o `AGENTS.md`.

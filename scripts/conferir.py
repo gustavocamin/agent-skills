@@ -31,6 +31,12 @@ TOKEN = re.compile(
 )
 
 erros: list[str] = []
+# Exceções exatas preservadas do pin upstream MLflow; nunca ampliar silenciosamente.
+NOMES_UPSTREAM = {
+    "skills/analyze-mlflow-chat-session": "analyzing-mlflow-session",
+    "skills/analyze-mlflow-trace": "analyzing-mlflow-trace",
+}
+avisos: set[str] = set()
 
 
 def frontmatter(arquivo: Path) -> dict[str, str]:
@@ -59,6 +65,11 @@ def conferir_conjunto(pastas: list[Path], rotulo: str) -> None:
             continue
         campos = frontmatter(skill)
         nome, descricao = campos.get("name", ""), campos.get("description", "")
+        if nome != pasta.name:
+            if NOMES_UPSTREAM.get(rel.as_posix()) == nome:
+                avisos.add(f"{rel}: nome upstream '{nome}' difere da pasta; compatibilidade runtime não verificada")
+            else:
+                erros.append(f"{rel}: name '{nome}' deve corresponder à pasta '{pasta.name}'")
         if not NOME.match(nome):
             erros.append(f"{rel}: name '{nome}' não é kebab-case")
         if not descricao or len(descricao) > 1024:
@@ -95,8 +106,11 @@ def conferir_skills() -> None:
                     erros.append(f"{arquivo.relative_to(RAIZ)}: sem description no frontmatter")
 
     listadas = set(re.findall(r"^\| `([a-z0-9-]+)` \|", (RAIZ / "TERCEIROS.md").read_text(), re.M))
-    for nome in listadas - {p.name for p in gerais}:
-        erros.append(f"TERCEIROS.md: '{nome}' não existe em skills/")
+    existentes = {p.name for p in gerais}
+    for projeto in pastas(RAIZ / "projetos"):
+        existentes.update(p.name for p in skills_do_projeto(projeto))
+    for nome in listadas - existentes:
+        erros.append(f"TERCEIROS.md: '{nome}' não existe em skills/ ou projetos/<projeto>/skills/")
 
 
 def conferir_segredos() -> None:
@@ -212,6 +226,14 @@ def main() -> int:
     conferir_skills()
     conferir_segredos()
     conferir_install()
+    testes = subprocess.run(
+        [sys.executable, "-B", "-m", "unittest", "discover", "-s", "scripts", "-p", "test_*.py"],
+        cwd=RAIZ, capture_output=True, text=True,
+    )
+    if testes.returncode:
+        erros.append("testes de regressão:\n" + testes.stdout + testes.stderr)
+    for aviso in sorted(avisos):
+        print(f"! {aviso}")
     if erros:
         print("\n".join(f"✗ {e}" for e in erros))
         return 1

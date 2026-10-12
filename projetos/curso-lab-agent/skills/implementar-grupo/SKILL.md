@@ -13,6 +13,20 @@ Implemente o Grupo N da Fxx conforme a spec aprovada. O `AGENTS.md` continua sen
 2. Leia `AGENTS.md`, `specs/constitution/mission.md`, `tech_stack.md` e `roadmap.md`, e os três arquivos da spec em `specs/features/Fxx-*/`. Confira no `plan.md` que o `Dono` do Grupo N corresponde ao agente e ambiente desta sessão. Anote a linha `Integra`; se faltar, o Claude Code integra. Confirme a branch indicada para o grupo.
 3. Se o grupo consome um contrato entre cliente e servidor, leia o schema em `app/server/validation.ts` antes de chamar a rota. Se define um contrato, tipe o corpo de cada pedido em `app/client/src/lib/api.ts`, ao lado da resposta, e crie um teste que passe as fixtures do cliente pelo schema do servidor.
 
+## Justificativa durante a implementação
+
+Leia no `plan.md` a explicação e o estado das escolhas relevantes aprovadas. Para
+uma nova escolha que mude impacto no negócio, custo, risco, operação ou
+reversibilidade, exponha a decisão e as alternativas antes de adotá-la. Peça ao
+dono humano sua explicação e confirmação; não transforme sua própria recomendação
+em fala ou aceite dele. Detalhes de execução já cobertos pela spec continuam no
+fluxo normal. Justificativa ausente fica [A CONFIRMAR], sem inventar uma razão.
+
+Registre nos caminhos permitidos pelo `Toca`, ou envie a proposta a quem integra.
+Compare alternativa escolhida, alternativas rejeitadas (inclusive não mudar),
+impacto esperado e observado, premissas de custo, risco, operação e limites de
+reversão. Não crie uma skill adicional para esse registro.
+
 ## Durante o trabalho
 
 - Trabalhe só nos caminhos do campo `Toca` do grupo e na branch indicada no `plan.md`. Atualize spec e código juntos nos caminhos permitidos.
@@ -33,7 +47,7 @@ Implemente o Grupo N da Fxx conforme a spec aprovada. O `AGENTS.md` continua sen
    Contrato: <rotas, corpos e tipos definidos ou usados; schema do servidor conferido> (ou "não toca contrato")
    Testes: …
    Mutações: <teste> ← <mutação> (falhou)
-   Evidência: <onde ficam no repo as provas citadas; o que você observou e o que foi relatado, com commit ou hash>
+   Evidência: <onde ficam no repo as provas citadas; o que você observou e o que foi relatado, com commit ou hash>; <referência à decisão e à explicação do dono humano, ou não se aplica com motivo>
    CI: <run> verde
    Desvios da spec: <diff comparado com Interfaces e Requisitos, item por item> (ou "nenhum")
    ```

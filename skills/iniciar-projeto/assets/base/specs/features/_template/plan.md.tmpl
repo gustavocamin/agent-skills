@@ -16,6 +16,22 @@ Roadmap: item Fxx em `specs/constitution/roadmap.md`
 - **Restrições:** <invariantes, limites da plataforma, custo, credenciais, disco>
 - **Arquivos compartilhados:** <arquivo → grupo que o cria ou muda; depois do grupo do contrato, só quem integra mexe neles>
 
+## Decisões técnicas e justificativa
+
+<!-- Preencha para escolhas relevantes desta feature, sem criar outro rito ou uma skill
+separada. Se não houver, diga por quê. O registro explica a spec; não autoriza adotar uma
+proposta, mudar o escopo ou operar ambiente real. -->
+
+- **Decisão e estado:** <proposta | aprovada pelo dono humano, com fonte da confirmação>
+- **Explicação do dono humano:** <suas próprias palavras e a fonte; se ausente, [A CONFIRMAR].
+  Uma recomendação do agente é identificada à parte, nunca atribuída ao dono.>
+- **Impacto no negócio:** <quem ganha o quê e qual evidência indicará sucesso>
+- **Custo:** <implantação e recorrência; estimativas, premissas e desconhecidos explícitos>
+- **Risco e operação:** <falhas, manutenção, responsável e mitigação>
+- **Reversibilidade:** <como voltar atrás e o custo/limite de desfazer, sem executar a volta>
+- **Alternativas rejeitadas:** <inclua não mudar; motivo e quem rejeitou. Sem decisão humana,
+  são alternativas em análise, não rejeições presumidas.>
+
 ## Grupos de tarefas
 
 Cada grupo é implementável sozinho e tem um dono (`Dono`), com `Branch` quando roda fora da branch da feature e `Toca` com os caminhos que mexe (protocolo no `AGENTS.md`). Grupos ⚠ tocam {{ALERTA}}: o dono para ao fim deles e mostra o diff. Grupos ⚠ nunca correm em paralelo, e o ⚠ fica só no grupo (ou no passo) que toca o ambiente real. Se um grupo define um contrato que outros consomem, ele vem primeiro, e os paralelos começam depois do push dele.
