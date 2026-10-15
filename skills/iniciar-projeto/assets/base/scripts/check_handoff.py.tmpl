@@ -7,11 +7,16 @@
 Saída 0 sem problema, 1 com problema, 2 em erro de uso ou de git. Num intervalo, vale o último
 handoff de cada grupo: um handoff ruim já enviado se corrige com outro do mesmo grupo, sem push
 forçado.
+
+O `Feito:` começa pelo agente da linha `Dono:` do grupo no plan.md da feature
+(`Feito: Codex (cloud) — …`). O plan.md é lido no mesmo commit do intervalo, ou no disco com
+--file; grupo sem linha `Dono:` não é conferido.
 """
 
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import os
 import re
@@ -44,7 +49,55 @@ def git(*args: str) -> str:
     return result.stdout.strip()
 
 
-def check_message(message: str) -> list[str]:
+def plano_no_disco(feature: str) -> list[str]:
+    return [
+        caminho.read_text(encoding="utf-8")
+        for caminho in sorted(Path("specs/features").glob(f"{feature}-*/plan.md"))
+    ]
+
+
+def plano_no_commit(commit: str, feature: str) -> list[str]:
+    pastas = subprocess.run(
+        ["git", "ls-tree", "--name-only", commit, "specs/features/"],
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout.splitlines()
+    planos = []
+    for pasta in pastas:
+        if Path(pasta).name.startswith(f"{feature}-"):
+            show = subprocess.run(
+                ["git", "show", f"{commit}:{pasta}/plan.md"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if not show.returncode:
+                planos.append(show.stdout)
+    return planos
+
+
+def dono_do_grupo(grupo: str, planos: list[str]) -> str | None:
+    """Agente da linha `Dono:` logo abaixo do "### Grupo N" no plan.md da feature."""
+    numero = grupo.partition("-g")[2]
+    titulo = re.compile(
+        rf"(?m)^### Grupo {re.escape(numero)}\b[^\n]*\n(?:[ \t]*\n)*Dono: ([^·\n]+)"
+    )
+    for plano in planos:
+        achado = titulo.search(plano)
+        if achado:
+            return achado.group(1).strip()
+    return None
+
+
+def dono_no(subject: str, planos_da_feature) -> str | None:
+    grupo = GRUPO.search(subject)
+    if not grupo:
+        return None
+    return dono_do_grupo(grupo.group(0), planos_da_feature(grupo.group(0).partition("-g")[0]))
+
+
+def check_message(message: str, dono: str | None = None) -> list[str]:
     lines = message.splitlines()
     subject = lines[0] if lines else ""
     problems: list[str] = []
@@ -72,6 +125,10 @@ def check_message(message: str) -> list[str]:
             problems.append(f"{field}: campo ausente")
         elif not "\n".join(values[field]).strip():
             problems.append(f"{field}: campo vazio")
+
+    feito = "\n".join(values.get("Feito", [])).strip()
+    if dono and feito and not re.match(rf"{re.escape(dono)}(?![\w(])", feito):
+        problems.append(f"Feito: comece pelo agente dono do grupo ({dono})")
 
     mutations = "\n".join(values.get("Mutações", [])).strip()
     if mutations and not (
@@ -130,11 +187,14 @@ def check_interval(base: str, head: str) -> tuple[int, int]:
             group = GRUPO.search(subject)
             key = group.group(0) if group else sha
             last[key] = (sha, message)
+    planos = functools.partial(plano_no_commit, head)
+    bad = 0
     for sha, message in last.values():
         subject = message.splitlines()[0] if message else ""
-        for problem in check_message(message):
+        problems = check_message(message, dono_no(subject, planos))
+        for problem in problems:
             print(f"{sha[:7]} {subject}: {problem}")
-    bad = sum(bool(check_message(message)) for _, message in last.values())
+        bad += bool(problems)
     print(f"{len(last)} handoff(s) conferido(s), {bad} com problema")
     return len(last), bad
 
@@ -155,7 +215,7 @@ def main() -> int:
         if args.file:
             message = args.file.read_text(encoding="utf-8")
             subject = message.splitlines()[0] if message else ""
-            problems = check_message(message)
+            problems = check_message(message, dono_no(subject, plano_no_disco))
             for problem in problems:
                 print(f"{subject}: {problem}")
             print(f"1 handoff(s) conferido(s), {int(bool(problems))} com problema")

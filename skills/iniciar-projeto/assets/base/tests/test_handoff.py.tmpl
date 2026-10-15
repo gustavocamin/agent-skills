@@ -253,3 +253,80 @@ def test_file_cli_and_empty_interval(repo: Path, tmp_path: Path) -> None:
     result = run(sys.executable, script, sha, sha, cwd=repo)
     assert result.returncode == 0
     assert "0 handoff(s) conferido(s), 0 com problema" in result.stdout
+
+
+PLANO_DONOS = """# F02 — exemplo · Plano
+
+### Grupo 1 — Código
+Dono: Claude Code · Toca: `src/`
+
+### Grupo 2 — Correções
+
+Dono: Codex (cloud) · Toca: `tests/`
+
+### Grupo 3 — Sem dono declarado
+Toca: `docs/`
+"""
+
+
+def plano(repo: Path, feature: str = "F02-exemplo", conteudo: str = PLANO_DONOS) -> None:
+    pasta = repo / "specs/features" / feature
+    pasta.mkdir(parents=True, exist_ok=True)
+    (pasta / "plan.md").write_text(conteudo, encoding="utf-8")
+    git(repo, "add", "specs")
+    git(repo, "commit", "-q", "-m", "spec(F02): plano")
+
+
+def handoff(grupo: str, feito: str) -> str:
+    return VALID.replace("handoff(F01-g1)", f"handoff({grupo})").replace(
+        "Feito: conferidor e testes", f"Feito: {feito}"
+    )
+
+
+@pytest.mark.parametrize(
+    ("grupo", "feito", "problemas"),
+    [
+        ("F02-g1", "Claude Code — conferidor e testes", 0),
+        ("F02-g1", "Claude Code. Conferidor e testes", 0),
+        ("F02-g1", "conferidor e testes", 1),
+        ("F02-g1", "Codex — conferidor e testes", 1),
+        ("F02-g1", "Claude Codex conferidor", 1),
+        ("F02-g2", "Codex (cloud). Correções da revisão", 0),
+        ("F02-g2", "Codex — correções da revisão", 1),
+        ("F02-g3", "testes novos", 0),
+    ],
+)
+def test_feito_comeca_pelo_agente_dono_do_grupo(
+    repo: Path, grupo: str, feito: str, problemas: int
+) -> None:
+    # O handoff diz quem fez, conferido contra a linha Dono do plano no commit do intervalo.
+    plano(repo)
+    base = git(repo, "rev-parse", "HEAD")
+    commit(repo, *handoff(grupo, feito).split("\n\n", 1))
+    assert check_handoff.check_interval(base, "HEAD") == (1, problemas)
+
+
+def test_dono_do_grupo_le_a_linha_abaixo_do_titulo() -> None:
+    assert check_handoff.dono_do_grupo("F02-g1", [PLANO_DONOS]) == "Claude Code"
+    assert check_handoff.dono_do_grupo("F02-g2", [PLANO_DONOS]) == "Codex (cloud)"
+    assert check_handoff.dono_do_grupo("F02-g3", [PLANO_DONOS]) is None
+    assert check_handoff.dono_do_grupo("F02-g9", [PLANO_DONOS]) is None
+
+
+def test_feature_de_mesmo_prefixo_nao_empresta_o_dono(repo: Path) -> None:
+    # "F02-" não casa "F020-": o número da feature é inteiro.
+    plano(repo, "F020-outra")
+    base = git(repo, "rev-parse", "HEAD")
+    commit(repo, *handoff("F02-g1", "conferidor e testes").split("\n\n", 1))
+    assert check_handoff.check_interval(base, "HEAD") == (1, 0)
+
+
+def test_file_confere_o_dono_no_plano_do_disco(repo: Path, tmp_path: Path) -> None:
+    plano(repo)
+    script = str(ROOT / "scripts/check_handoff.py")
+    rascunho = tmp_path / "handoff.txt"
+    rascunho.write_text(handoff("F02-g1", "conferidor e testes"), encoding="utf-8")
+    resultado = run(sys.executable, script, "--file", str(rascunho), cwd=repo)
+    assert resultado.returncode == 1 and "Claude Code" in resultado.stdout
+    rascunho.write_text(handoff("F02-g1", "Claude Code — conferidor"), encoding="utf-8")
+    assert run(sys.executable, script, "--file", str(rascunho), cwd=repo).returncode == 0
