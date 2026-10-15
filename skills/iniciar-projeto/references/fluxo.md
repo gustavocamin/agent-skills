@@ -50,8 +50,8 @@ As skills de design são pessoais (`gustavocamin/agent-skills`), e o ciclo diz q
 
 - **Especificar:** a `spec-feature` passa um semáforo pelos itens da entrevista antes de escrever e relê a spec como Produto, Design e Engenharia antes do resumo. Tela nova ganha um grupo de mockups.
 - **Mockups:** o grupo segue a `mockup-telas` (HTML estático e clicável, todos os estados, CSS do app) e para no ok do dono humano; a `frontend-design` dá a direção visual quando o app ainda não tem uma.
-- **Implementar:** o grupo que constrói a tela segue o mockup aprovado e fecha com uma rodada de `impeccable polish` dentro do `Toca`.
-- **Validar:** `impeccable audit` nas telas alteradas, antes do aceite humano; P0 e P1 viram gap.
+- **Implementar:** o grupo que constrói a tela segue o mockup aprovado, aplica a `fixing-accessibility` a controles e formulários, confere no navegador pela `playwright-cli` (só servidor local) e fecha com uma rodada de `impeccable polish` dentro do `Toca`.
+- **Validar:** `impeccable audit` nas telas alteradas, antes do aceite humano; P0 e P1 viram gap. App usado no iPhone: a `conferir-no-iphone` emula o aparelho, roda a sonda de iOS, guarda as screenshots no repo e monta a lista do aceite físico.
 
 ## Rituais do dia
 

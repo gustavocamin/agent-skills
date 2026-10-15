@@ -7,14 +7,15 @@ no setup de qualquer ambiente cloud (Claude Code na web, Codex cloud).
 
 | Pasta | Quando entra | Skills |
 | --- | --- | --- |
-| `skills/` | sempre | `iniciar-projeto` (cria um projeto no fluxo spec-first), `skill-pessoal` (cria ou muda uma skill deste repo), `liberar-disco` (mede o disco e propõe o que limpar, sem apagar sem ok); `mockup-telas` (mockup clicável das telas novas antes do código, com conferidor de links); 8 skills do MLflow, do [mlflow/skills](https://github.com/mlflow/skills); 5 de Obsidian, do [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills); `grill-me` e `grilling`, do [mattpocock/skills](https://github.com/mattpocock/skills); 6 da [Superpowers](https://github.com/obra/superpowers) (`systematic-debugging`, `verification-before-completion`, revisão de código…); a `frontend-design`, do [anthropics/skills](https://github.com/anthropics/skills); e a `impeccable`, do [pbakaus/impeccable](https://github.com/pbakaus/impeccable) (ver [TERCEIROS.md](TERCEIROS.md)) |
+| `skills/` | sempre | `iniciar-projeto` (cria um projeto no fluxo spec-first), `skill-pessoal` (cria ou muda uma skill deste repo), `liberar-disco` (mede o disco e propõe o que limpar, sem apagar sem ok); `mockup-telas` (mockup clicável das telas novas antes do código, com conferidor de links); `conferir-no-iphone` (emula o iPhone, roda uma sonda de iOS e prepara o aceite físico); 8 skills do MLflow, do [mlflow/skills](https://github.com/mlflow/skills); 5 de Obsidian, do [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills); `grill-me` e `grilling`, do [mattpocock/skills](https://github.com/mattpocock/skills); 6 da [Superpowers](https://github.com/obra/superpowers) (`systematic-debugging`, `verification-before-completion`, revisão de código…); a `frontend-design`, do [anthropics/skills](https://github.com/anthropics/skills); a `impeccable`, do [pbakaus/impeccable](https://github.com/pbakaus/impeccable); a `playwright-cli`, do [microsoft/playwright-cli](https://github.com/microsoft/playwright-cli); e a `fixing-accessibility`, do [ibelick/ui-skills](https://github.com/ibelick/ui-skills) (ver [TERCEIROS.md](TERCEIROS.md)) |
 | `projetos/obsidian/` | só com `--projeto obsidian` | o `.claude/` do vault (`00. Obsidian`): 5 skills (`analysis`, `daily-operations`, `output-maintenance`, `thinking-tools`, `vault-automation`), 38 comandos (`/today`, `/close-day`, `/week`, `/triage-inbox`, `/study-loop`…) e o agente `vault-auditor` |
 | `projetos/curso-lab-agent/` | só com `--projeto curso-lab-agent` | `constitution-interview`, `spec-feature`, `implementar-grupo`, `validate-feature`, `replan`, na versão do curso-lab |
 
 **Telas, em ordem:** visão e requisitos ficam na `spec-feature` do projeto (com semáforo de
 completude e revisão em três papéis); a `mockup-telas` faz o mockup clicável e para no ok; a
-`frontend-design` dá a direção visual de tela nova; a `impeccable` faz o `polish` ao fechar o
-grupo e o `audit` na validação. As skills do ciclo (`iniciar-projeto` e os projetos gerados por
+`frontend-design` dá a direção visual de tela nova; a `fixing-accessibility` cuida de controles e
+formulários; a `playwright-cli` abre o navegador; a `impeccable` faz o `polish` ao fechar o grupo e
+o `audit` na validação; a `conferir-no-iphone` prepara o aceite no aparelho. As skills do ciclo (`iniciar-projeto` e os projetos gerados por
 ela) dizem quando cada uma entra, então elas disparam no passo certo mesmo sem serem citadas.
 
 Cada pasta de `projetos/` espelha o `.claude/` de um projeto: `skills/`, `commands/` e

@@ -102,3 +102,32 @@ Claude Code é `/impeccable <comando>`.
 | Skill | Pasta de origem |
 | --- | --- |
 | `impeccable` | `.agents/skills/impeccable/` |
+
+## Playwright CLI
+
+Copiada sem alteração do [microsoft/playwright-cli](https://github.com/microsoft/playwright-cli),
+commit `b85c7a736bb473bf55b584e54a09ffa698d6d871` (copiada em 15/10/2026), sob a licença
+Apache-2.0 ([licencas/playwright-cli-LICENSE](licencas/playwright-cli-LICENSE)). O `SKILL.md` é o
+mesmo que vem no pacote `@playwright/cli` 0.1.22, com que os comandos foram testados em 15/10/2026.
+
+- Precisa do CLI: `npm install -g @playwright/cli@latest`, com o ok do Gustavo.
+- O frontmatter traz `allowed-tools` (`playwright-cli`, `npx playwright`): no Claude Code, esses
+  comandos rodam sem pedir aprovação enquanto a skill está ativa. O Codex ignora o campo. Os fluxos
+  usam a skill só contra servidor local com dados sintéticos, nunca o Site publicado.
+- Na cloud do Claude Code na web, o WebKit não baixa e o `file://` é recusado: a
+  `conferir-no-iphone` diz como abrir com o Chromium da imagem por `http://127.0.0.1`.
+
+| Skill | Pasta de origem |
+| --- | --- |
+| `playwright-cli` | `skills/playwright-cli/` |
+
+## UI Skills
+
+Copiada sem alteração do [ibelick/ui-skills](https://github.com/ibelick/ui-skills), commit
+`fdd6c09dd866354a627ddf3fa46b7b01d421176d` (copiada em 15/10/2026), sob a licença MIT
+([licencas/ui-skills-LICENSE](licencas/ui-skills-LICENSE)). As outras do pacote ficam de fora: a
+`baseline-ui` exige Tailwind e `motion/react`, e a `improve-ui` repete o `polish` da `impeccable`.
+
+| Skill | Pasta de origem |
+| --- | --- |
+| `fixing-accessibility` | `skills/fixing-accessibility/` |
