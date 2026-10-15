@@ -11,6 +11,10 @@ forçado.
 O `Feito:` começa pelo agente da linha `Dono:` do grupo no plan.md da feature
 (`Feito: Codex (cloud) — …`). O plan.md é lido no mesmo commit do intervalo, ou no disco com
 --file; grupo sem linha `Dono:` não é conferido.
+
+Grupo ⚠ (título com ⚠ no plan.md da feature) declara `Ambiente: local`: grupo ⚠ não roda no
+cloud (tech_stack.md, "Cloud ou local"). Nos demais, `Ambiente:` é opcional e começa por local
+ou cloud.
 """
 
 from __future__ import annotations
@@ -25,6 +29,7 @@ import sys
 from pathlib import Path
 
 FIELDS = ("Feito", "Contrato", "Testes", "Mutações", "Evidência", "CI", "Desvios da spec")
+AMBIENTE = "Ambiente"
 SUBJECT = re.compile(r"^handoff\((F\d{2,}-g\d+)\): \S.*$")
 # Todo assunto que começa com a palavra "handoff" é conferido: um "Handoff(...)" ou um
 # "handoff F01-g1:" malformado é recusado, em vez de passar em silêncio.
@@ -90,6 +95,20 @@ def dono_do_grupo(grupo: str, planos: list[str]) -> str | None:
     return None
 
 
+def grupo_perigoso(grupo: str, planos: list[str]) -> bool:
+    """Diz se o "### Grupo N" de algum plan.md da feature tem ⚠ no título."""
+    numero = grupo.partition("-g")[2]
+    titulo = re.compile(rf"(?m)^### Grupo {re.escape(numero)}\b[^\n]*")
+    return any("⚠" in item.group(0) for plano in planos for item in titulo.finditer(plano))
+
+
+def perigoso_no(subject: str, planos_da_feature) -> bool:
+    grupo = GRUPO.search(subject)
+    if not grupo:
+        return False
+    return grupo_perigoso(grupo.group(0), planos_da_feature(grupo.group(0).partition("-g")[0]))
+
+
 def dono_no(subject: str, planos_da_feature) -> str | None:
     grupo = GRUPO.search(subject)
     if not grupo:
@@ -97,7 +116,7 @@ def dono_no(subject: str, planos_da_feature) -> str | None:
     return dono_do_grupo(grupo.group(0), planos_da_feature(grupo.group(0).partition("-g")[0]))
 
 
-def check_message(message: str, dono: str | None = None) -> list[str]:
+def check_message(message: str, dono: str | None = None, perigoso: bool = False) -> list[str]:
     lines = message.splitlines()
     subject = lines[0] if lines else ""
     problems: list[str] = []
@@ -108,7 +127,7 @@ def check_message(message: str, dono: str | None = None) -> list[str]:
     current: str | None = None
     for line in lines[1:]:
         match = FIELD.match(line)
-        if match and match.group(1) in FIELDS:
+        if match and match.group(1) in (*FIELDS, AMBIENTE):
             current = match.group(1)
             if current in values:
                 problems.append(f"{current}: campo repetido")
@@ -145,6 +164,15 @@ def check_message(message: str, dono: str | None = None) -> list[str]:
         problems.append("CI: cite o número ou link de um run")
     elif ci and not re.search(r"\bverde\b", ci, re.IGNORECASE):
         problems.append("CI: o run citado precisa estar verde")
+
+    ambiente = "\n".join(values.get(AMBIENTE, [])).strip()
+    tipo = re.match(r"(local|cloud)\b", ambiente, re.IGNORECASE)
+    if AMBIENTE in values and not tipo:
+        problems.append("Ambiente: comece por local ou cloud")
+    elif perigoso and not ambiente:
+        problems.append("Ambiente: grupo ⚠ declara onde rodou (local)")
+    elif perigoso and tipo and tipo.group(1).lower() == "cloud":
+        problems.append("Ambiente: grupo ⚠ não roda no cloud (tech_stack.md)")
     return problems
 
 
@@ -191,7 +219,7 @@ def check_interval(base: str, head: str) -> tuple[int, int]:
     bad = 0
     for sha, message in last.values():
         subject = message.splitlines()[0] if message else ""
-        problems = check_message(message, dono_no(subject, planos))
+        problems = check_message(message, dono_no(subject, planos), perigoso_no(subject, planos))
         for problem in problems:
             print(f"{sha[:7]} {subject}: {problem}")
         bad += bool(problems)
@@ -215,7 +243,9 @@ def main() -> int:
         if args.file:
             message = args.file.read_text(encoding="utf-8")
             subject = message.splitlines()[0] if message else ""
-            problems = check_message(message, dono_no(subject, plano_no_disco))
+            problems = check_message(
+                message, dono_no(subject, plano_no_disco), perigoso_no(subject, plano_no_disco)
+            )
             for problem in problems:
                 print(f"{subject}: {problem}")
             print(f"1 handoff(s) conferido(s), {int(bool(problems))} com problema")

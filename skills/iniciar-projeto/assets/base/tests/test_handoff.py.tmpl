@@ -330,3 +330,64 @@ def test_file_confere_o_dono_no_plano_do_disco(repo: Path, tmp_path: Path) -> No
     assert resultado.returncode == 1 and "Claude Code" in resultado.stdout
     rascunho.write_text(handoff("F02-g1", "Claude Code — conferidor"), encoding="utf-8")
     assert run(sys.executable, script, "--file", str(rascunho), cwd=repo).returncode == 0
+
+
+PLANO_PERIGO = """# F03 — exemplo · Plano
+
+### Grupo 1 — Código
+Dono: Claude Code · Toca: `src/`
+
+### Grupo 2 — Publicação ⚠
+Dono: Claude Code · Toca: `docs/`
+"""
+
+
+def handoff_g2(ambiente: str | None, grupo: str = "F03-g2") -> str:
+    mensagem = handoff(grupo, "Claude Code — conferidor e testes")
+    return mensagem if ambiente is None else mensagem + f"Ambiente: {ambiente}\n"
+
+
+@pytest.mark.parametrize(
+    ("ambiente", "problemas"),
+    [("local", 0), ("local, worktree no Mac", 0), (None, 1), ("cloud", 1), ("Cloud", 1)],
+)
+def test_grupo_perigoso_declara_ambiente_local(
+    repo: Path, ambiente: str | None, problemas: int
+) -> None:
+    plano(repo, "F03-exemplo", PLANO_PERIGO)
+    base = git(repo, "rev-parse", "HEAD")
+    commit(repo, *handoff_g2(ambiente).split("\n\n", 1))
+    assert check_handoff.check_interval(base, "HEAD") == (1, problemas)
+
+
+def test_grupo_sem_perigo_aceita_cloud_ou_nenhum_ambiente(repo: Path) -> None:
+    plano(repo, "F03-exemplo", PLANO_PERIGO)
+    base = git(repo, "rev-parse", "HEAD")
+    commit(repo, *handoff_g2("cloud", "F03-g1").split("\n\n", 1))
+    assert check_handoff.check_interval(base, "HEAD") == (1, 0)
+    assert check_handoff.check_message(VALID) == []
+
+
+def test_ambiente_invalido_e_recusado_em_qualquer_grupo() -> None:
+    problemas = check_handoff.check_message(VALID + "Ambiente: talvez\n")
+    assert any("Ambiente" in item for item in problemas)
+
+
+def test_perigo_vem_do_plano_no_commit_conferido(repo: Path) -> None:
+    # O plano que vale é o do commit do intervalo: tirar o ⚠ depois não o apaga.
+    plano(repo, "F03-exemplo", PLANO_PERIGO)
+    base = git(repo, "rev-parse", "HEAD")
+    sha = commit(repo, *handoff_g2(None).split("\n\n", 1))
+    plano(repo, "F03-exemplo", PLANO_PERIGO.replace(" ⚠", ""))
+    assert check_handoff.check_interval(base, sha) == (1, 1)
+    assert check_handoff.check_interval(base, "HEAD") == (1, 0)
+
+
+def test_file_confere_o_perigo_no_plano_do_disco(repo: Path, tmp_path: Path) -> None:
+    plano(repo, "F03-exemplo", PLANO_PERIGO)
+    script = str(ROOT / "scripts/check_handoff.py")
+    rascunho = tmp_path / "handoff.txt"
+    rascunho.write_text(handoff_g2(None), encoding="utf-8")
+    assert run(sys.executable, script, "--file", str(rascunho), cwd=repo).returncode == 1
+    rascunho.write_text(handoff_g2("local"), encoding="utf-8")
+    assert run(sys.executable, script, "--file", str(rascunho), cwd=repo).returncode == 0
