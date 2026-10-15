@@ -55,8 +55,16 @@ Cole no começo do script de setup do ambiente e, no Codex cloud, também no scr
 ) || echo "agent-skills: instalação falhou; a tarefa segue sem as skills pessoais"
 ```
 
-- **Claude Code na web:** em claude.ai/code, no ambiente → script de setup. Precisa de acesso
-  de rede que alcance o github.com (o nível **Trusted** padrão alcança).
+- **Claude Code na web:** no seletor de ambiente (em claude.ai/code ou no título da sessão) →
+  **Edit** → **Setup script**. O script é de cada ambiente, não da conta: o **Default** vem sem
+  nenhum, então cole em cada ambiente que usar. Precisa de acesso de rede que alcance o
+  github.com (o nível **Trusted** padrão alcança). O setup roda antes do Claude Code abrir, e o
+  disco que ele deixa vira cache das sessões seguintes, que não rodam o script de novo; o cache
+  só se refaz quando o script ou os hosts liberados mudam, ou ao expirar (cerca de 7 dias, doc de
+  15/10/2026). Uma skill nova no repo chega em até uma semana; para trazê-la já, mude qualquer
+  coisa no script (um comentário serve) ou rode o bloco acima dentro da sessão. Hook
+  SessionStart no `~/.claude/settings.json` não serve: a sessão cloud não lê as configurações
+  de usuário.
 - **Codex cloud:** no ambiente → script de setup e script de manutenção (este roda quando um
   contêiner em cache, de até 12 h, é retomado; sem ele, a tarefa usa as skills do dia do setup).
   O setup tem internet; a fase do agente, por padrão, não. Com o HOME sem escrita (observado no
@@ -70,6 +78,16 @@ Cole no começo do script de setup do ambiente e, no Codex cloud, também no scr
   projetos da `iniciar-projeto` já fazem isso (`_skills_do_repo` no `tests/test_processo.py`).
 
 Para fixar uma versão, troque o clone por `git clone ... && git -C "$d" checkout <commit>`.
+
+### Na conta do claude.ai (todas as sessões, sem script)
+
+As sessões cloud de qualquer ambiente, as rotinas e o Cowork carregam as skills ativadas na conta
+do claude.ai (configurações de skills do claude.ai, ou **Customize** no app Desktop). Envie lá
+cada pasta de `skills/`: o upload só aceita no frontmatter `name`, `description`, `license`,
+`compatibility`, `metadata` e `allowed-tools`, e as de `skills/` só usam esses. O custo é que a
+conta deixa de seguir o repo: mudou uma skill aqui, reenvie. E só entram skills, não os comandos
+e agentes de `projetos/`. Se o repo da sessão tiver uma skill com o mesmo nome, a dele fica com
+`/<nome>` e a da conta vira `/anthropic-skills:<nome>`.
 
 ## Manter
 
