@@ -33,3 +33,46 @@ do app do Obsidian aberto, então só serve na máquina; a `defuddle` precisa do
 | `obsidian-bases` | `skills/obsidian-bases/` |
 | `obsidian-cli` | `skills/obsidian-cli/` |
 | `obsidian-markdown` | `skills/obsidian-markdown/` |
+
+## Matt Pocock
+
+Copiadas sem alteração do [mattpocock/skills](https://github.com/mattpocock/skills), commit
+`49dd158d1076134a641b33efb035946536778336` (copiado em 15/10/2026), sob a licença MIT
+([licencas/mattpocock-skills-LICENSE](licencas/mattpocock-skills-LICENSE)). A `grill-me` só
+chama a `grilling` e não dispara sozinha (`disable-model-invocation`): use `/grill-me`.
+
+| Skill | Pasta de origem |
+| --- | --- |
+| `grill-me` | `skills/productivity/grill-me/` |
+| `grilling` | `skills/productivity/grilling/` |
+
+## Superpowers
+
+Copiadas sem alteração do [obra/superpowers](https://github.com/obra/superpowers), commit
+`bb92a77741419a4ab5f06e711a283343f1ada0c3` (copiado em 15/10/2026), sob a licença MIT
+([licencas/superpowers-LICENSE](licencas/superpowers-LICENSE)). Entram só as que disparam numa
+situação específica; as de fluxo (`using-superpowers`, `brainstorming`, `writing-plans`,
+`executing-plans`, `subagent-driven-development`, `test-driven-development`, `using-git-worktrees`,
+`finishing-a-development-branch`) ficam de fora por decisão do Gustavo (15/10/2026), porque
+disparam em quase toda tarefa e competem com o fluxo spec-first; a `diagnosing-superpowers` só
+serve a quem usa o pacote inteiro. Algumas citam `superpowers:test-driven-development`, que
+não está aqui.
+
+| Skill | Pasta de origem |
+| --- | --- |
+| `dispatching-parallel-agents` | `skills/dispatching-parallel-agents/` |
+| `receiving-code-review` | `skills/receiving-code-review/` |
+| `requesting-code-review` | `skills/requesting-code-review/` |
+| `systematic-debugging` | `skills/systematic-debugging/` |
+| `verification-before-completion` | `skills/verification-before-completion/` |
+| `writing-skills` | `skills/writing-skills/` |
+
+## Anthropic
+
+Copiada sem alteração do [anthropics/skills](https://github.com/anthropics/skills), commit
+`dbd4588f9e1033efb41dad4bef2f7947c8993d44` (copiado em 15/10/2026), sob a licença Apache-2.0
+(o `LICENSE.txt` vai dentro da pasta da skill).
+
+| Skill | Pasta de origem |
+| --- | --- |
+| `frontend-design` | `skills/frontend-design/` |

@@ -7,7 +7,7 @@ no setup de qualquer ambiente cloud (Claude Code na web, Codex cloud).
 
 | Pasta | Quando entra | Skills |
 | --- | --- | --- |
-| `skills/` | sempre | `iniciar-projeto` (cria um projeto no fluxo spec-first), `skill-pessoal` (cria ou muda uma skill deste repo), `liberar-disco` (mede o disco e propõe o que limpar, sem apagar sem ok); 8 skills do MLflow, do [mlflow/skills](https://github.com/mlflow/skills), e 5 de Obsidian, do [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) (ver [TERCEIROS.md](TERCEIROS.md)) |
+| `skills/` | sempre | `iniciar-projeto` (cria um projeto no fluxo spec-first), `skill-pessoal` (cria ou muda uma skill deste repo), `liberar-disco` (mede o disco e propõe o que limpar, sem apagar sem ok); 8 skills do MLflow, do [mlflow/skills](https://github.com/mlflow/skills); 5 de Obsidian, do [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills); `grill-me` e `grilling`, do [mattpocock/skills](https://github.com/mattpocock/skills); 6 da [Superpowers](https://github.com/obra/superpowers) (`systematic-debugging`, `verification-before-completion`, revisão de código…); e a `frontend-design`, do [anthropics/skills](https://github.com/anthropics/skills) (ver [TERCEIROS.md](TERCEIROS.md)) |
 | `projetos/obsidian/` | só com `--projeto obsidian` | o `.claude/` do vault (`00. Obsidian`): 5 skills (`analysis`, `daily-operations`, `output-maintenance`, `thinking-tools`, `vault-automation`), 38 comandos (`/today`, `/close-day`, `/week`, `/triage-inbox`, `/study-loop`…) e o agente `vault-auditor` |
 | `projetos/curso-lab-agent/` | só com `--projeto curso-lab-agent` | `constitution-interview`, `spec-feature`, `implementar-grupo`, `validate-feature`, `replan`, na versão do curso-lab |
 
