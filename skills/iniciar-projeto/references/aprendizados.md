@@ -2,6 +2,8 @@
 
 Lições do curso-lab-agent, de 25/09 a 08/10/2026: F00 a F34, 330 commits, 34 PRs e dois agentes (Claude Code e Codex). Cada item traz a regra, o porquê (com a feature de origem, "Fxx") e, depois da seta, onde o kit a aplica.
 
+Lições de outros projetos que adotaram o kit entram com a origem entre parênteses, como "(compras-do-ape, F04a)".
+
 Use este arquivo para explicar por que uma regra existe, para adaptar um artefato sem perder a lição que ele carrega e para receber aprendizados novos. Lição que vale para qualquer projeto entra aqui e no template que a aplica, juntos (passo final da `replan` de cada projeto).
 
 **O retrato em quatro números:** a revisão independente achou de 3 a 13 problemas em **toda** feature, depois da suíte verde; as features fecharam de 2 a 20 dias antes do prazo; o gargalo foi a validação humana, não o agente; o problema mais caro e repetido foi o iCloud esvaziando o repo.
@@ -118,6 +120,7 @@ Use este arquivo para explicar por que uma regra existe, para adaptar um artefat
 - **Leitura divergente do revisor é ambiguidade**: o comportamento fica, o requisito é reescrito e entra o teste que mata a mutação (F28).
 - **A revisão precisa de sessão própria.** Chamar o CLI do outro agente de dentro da sessão terminou em erro, sem relatório (F33). → `validate-feature`.
 - **Uma revisão vale só para a versão revisada** (F21).
+- **Peça ao revisor mutações de texto visível e da ligação da tela com a lógica.** Os testes de interface liam o texto do anúncio oculto (`role=status`) e aceitavam "Sobra" no lugar de "Falta" no cartão visível; só a revisão independente achou, depois de 21 mutações de quem integra (compras-do-ape, F04a). → prompt da `validate-feature`.
 
 ## 7. Handoff e integração
 
@@ -130,6 +133,9 @@ Use este arquivo para explicar por que uma regra existe, para adaptar um artefat
 - **Arquivos de estado têm um só escritor**: `start_here.md`, constituição, "Registro dos grupos" e "Resultado" ficam com quem integra (F29). Os donos do Codex não marcaram os próprios checkboxes e quem integra os marcou (F31). → `AGENTS.md`.
 - **Feature feita por um agente só perde as salvaguardas cruzadas.** A F33 não teve revisão nem mutação do outro agente, e quem a fez abriu 4 PRs e escreveu o roadmap. → "Integra" só por decisão do dono humano.
 - **Branch de partida fora da `main` é desvio registrado** (F31 nasceu da branch de outra feature).
+- **O handoff diz quem fez, e o CI confere.** Três handoffs de um agente novo vieram sem o nome dele, com contagens de testes que não batiam com a execução, e um declarou "Desvios: nenhum" com dois requisitos em aberto. O `Feito:` passou a começar pelo agente da linha `Dono:` do grupo, lido do `plan.md` no commit conferido (compras-do-ape, F04a). → `check_handoff.py`, `AGENTS.md`, `implementar-grupo`.
+- **Branch de grupo congelada depois do handoff, e a ponta conferida antes de cada merge.** Um agente na cloud enviou três commits à branch do grupo dois minutos antes do merge da feature na `main`, que saiu sem eles e precisou de um PR `fix` (compras-do-ape, F04a). → `AGENTS.md`, `implementar-grupo`, `validate-feature`.
+- **Um dono por correção.** Quem integra e o grupo autorizado corrigiram em paralelo a mesma regra achada na revisão; o merge conflitou e as provas de mutação ficaram duplicadas (compras-do-ape, F04a). → `AGENTS.md`, `validate-feature`.
 
 ## 8. CI e qualidade
 
@@ -201,6 +207,7 @@ Use este arquivo para explicar por que uma regra existe, para adaptar um artefat
 - **O cloud parte do repositório remoto**: quem integra faz push da branch da feature antes de abrir um grupo lá (F29). → `AGENTS.md`.
 - **O Codex cloud agiu no GitHub com a identidade do dono humano** (push e leitura do CI, F34), ao contrário do que a regra dizia: a regra foi atualizada, e quem integra confere a `main` e a branch da feature antes de cada merge. → `AGENTS.md`.
 - **`Integra: Codex` só por decisão do dono humano** (F33). → `AGENTS.md`.
+- **Cloud primeiro.** Para poupar processamento e disco da máquina local, todo trabalho sem segredo, ambiente real ou presença humana vai para a cloud, inclusive a integração, a revisão e o PR; o trabalho ⚠ se divide em preparação na cloud e execução local curta. A sessão de integração na cloud conferiu três grupos, rodou mutações e fumaça em navegador e mesclou os PRs; o que ela não alcançou ficou local: o proxy recusou excluir branches (HTTP 403) e o push livre só ia para a branch da própria sessão (compras-do-ape, F04a). → `AGENTS.md`, `tech_stack` ("Cloud ou local"), `spec-feature`.
 - **Sessão de quem integra sem credencial nem o outro agente**: revisão por subagente, com o motivo registrado, e os ⚠ com o humano, guiados por um roteiro com pré-checagens e a saída esperada de cada comando (F30, F31).
 - **Os dois agentes formatam igual** porque a versão do formatador vem do lockfile e o fechamento de grupo roda o formatador (F28, F30).
 - **Commits em português e testes com nome de domínio.** A F33 teve 8 de 10 commits em inglês e testes `test_f33_*` (F33). → `AGENTS.md`.

@@ -15,6 +15,14 @@
 - **Ambiente:** `pip` + `venv` (`pip install -e ".[dev]"`). A pasta do repo fica fora do iCloud: nome terminado em `.nosync` ou fora de `Documents` e `Desktop`. O iCloud esvazia `.git`, venv e `node_modules` quando o disco aperta, e a marca "Manter baixado" não segura. A cópia do repo é o GitHub; o que só existe localmente (`.env`, evidências pessoais) fica sem backup.
 - **Disco:** cada worktree com dependências ocupa espaço (com um app Node, cerca de 1 GB). Grupos em paralelo só com folga (referência: 15 GB livres); abaixo disso, grupos em sequência{{#se codex}} ou no Codex cloud{{/se}}.
 - **Paralelização:** grupos sem ⚠ com `Toca` disjunto podem ir para subagentes em worktrees{{#se codex}} ou para o Codex{{/se}}; quem integra resolve os conflitos e roda a suíte inteira. Grupos ⚠ em sequência, com dono explícito.
+- **Cloud ou local:** cloud primeiro, para poupar processamento e disco locais. A sessão na cloud não tem segredo, roda num contêiner descartável e age no GitHub com a identidade de {{DONO}}; o push livre costuma ir só para a branch da própria sessão, e o proxy pode recusar exclusões.
+
+  | Trabalho | Onde |
+  |---|---|
+  | Grupo sem ⚠ (código, testes, docs) e a preparação de um trabalho ⚠ | Cloud{{#se codex}} (Codex cloud como dono){{/se}} |
+  | Conferência de handoff, mutações, revisão independente, validação, PR | Cloud (Claude Code na web) ou local |
+  | Comando ⚠ ({{ALERTA}}, permissões dos agentes) | Local, em sequência, com aprovação |
+  | Prova contra o ambiente real, exclusão de branch remota, aceites humanos | Local, com {{DONO}} |
 - **Mudança em massa primeiro:** formatação ou renomeação que toca muitos arquivos entra sozinha, antes de grupos em paralelo, porque conflitaria com todos eles.
 - **Qualidade:** `pytest`, `ruff` e o conferidor de handoff (`scripts/check_handoff.py`) no CI. O CI roda os mesmos checks que o deploy exige: um check que só o deploy roda deixa o CI verde e o deploy vermelho. [A CONFIRMAR] O que mais o produto pede (typecheck, lint de front, validação de schema).
 - **Docs atuais no contexto:** [A CONFIRMAR] Skills oficiais da plataforma e um MCP de docs, para não citar API de memória.

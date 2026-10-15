@@ -25,6 +25,7 @@ As skills do fluxo (`constitution-interview`, `spec-feature`, `implementar-grupo
 - **Mutação:** todo teste novo de contrato ou de dado é provado por uma mutação que o faz falhar, feita numa cópia (`git archive HEAD | tar -x -C <pasta temporária>` ou uma worktree descartável), nunca no repo.
 - **Evidência:** todo resultado registrado (teste real, aceite, deploy, publicação) diz se foi observado por quem escreve ou relatado por {{DONO}} ou por outro agente, e cita o commit ou o hash do que foi testado. Logs, prints e mutações citados ficam no `validation.md` ou no repo, nunca só numa pasta temporária.
 - **Revisão independente:** toda feature passa por uma revisão numa sessão nova, sem histórico, com só a constituição, a spec e o diff ({{#se codex}}feita pelo agente que não integra{{/se}}{{#se !codex}}um subagente ou uma sessão nova{{/se}}). O prompt fica na skill `validate-feature`.
+- **Cloud primeiro:** trabalho sem segredo, ambiente real ou presença de {{DONO}} roda na cloud ({{#se codex}}Codex cloud como dono de grupo, {{/se}}Claude Code na web integrando, revisando e abrindo PR), para poupar processamento e disco da máquina local. Local fica só o que a cloud não alcança: comando ⚠, publicação, prova contra o ambiente real, exclusão de branch remota (o proxy da cloud pode recusar) e aceites humanos. Trabalho ⚠ se divide em um grupo sem ⚠ de preparação, na cloud, e um grupo ⚠ curto de execução, local. Tabela em `tech_stack.md`, "Cloud ou local".
 - **CI decide:** nada entra na branch da feature nem na `main` com o CI vermelho. O merge na `main` acontece com o ok de {{DONO}}; correção achada depois do merge vai num PR `fix(Fxx)` próprio.
 - **Fim do dia:** quem integra atualiza o `start_here.md` (data, branch ativa, próxima ação, o que aguarda {{DONO}}, estado agora, pendências e uma linha no registro diário), no PR da feature ou do replan em curso, e não num PR próprio. Se ele divergir da constituição, a constituição vence e o `start_here.md` é corrigido.
 - **Idioma e nomes:** commits, PRs e specs em português. Testes têm nome de domínio (`test_publicacao.py`), não de feature (`test_f03.py`).
@@ -53,16 +54,19 @@ Dono: {{#se codex}}Codex{{/se}}{{#se !codex}}Claude Code{{/se}} · Branch: `feat
    - Passam `pytest -q`, `ruff check .` e os demais comandos de "Comandos" que o grupo tocar, na worktree do grupo.
    - **Contrato.** O grupo que define um contrato entre partes (cliente e servidor, quem publica e quem lê) escreve o formato de cada pedido e de cada resposta, com os nomes dos campos, e um teste passa os exemplos de quem consome pelo validador de quem produz. O grupo que consome lê esse validador antes de usar o contrato e o cita no handoff.
    - `Desvios da spec` compara o diff com as seções Interfaces e Requisitos do `requirements.md`, item por item, e não com a memória do agente.
-   - Antes do commit de handoff, salve a mensagem num arquivo e rode `python scripts/check_handoff.py --file <arquivo>`. O CI recusa handoff sem os campos e formatos obrigatórios. Um handoff ruim já enviado se corrige com outro commit `handoff(...)` do mesmo grupo, sem push forçado: vale o último.
+   - Antes do commit de handoff, salve a mensagem num arquivo e rode `python scripts/check_handoff.py --file <arquivo>`. O CI recusa handoff sem os campos e formatos obrigatórios ou com `Feito:` que não comece pelo agente da linha `Dono:` do grupo. Um handoff ruim já enviado se corrige com outro commit `handoff(...)` do mesmo grupo, sem push forçado: vale o último.
    - Num grupo ⚠, cada comando ⚠ pede a aprovação de {{DONO}} antes de rodar, e o dono mostra o diff a {{DONO}} antes do handoff.
+   - **Branch congelada.** Depois do handoff, o dono não envia mais nada à branch do grupo sem pedido de quem integra; a correção pedida vem com um handoff novo do mesmo grupo.
 4. **Integrar.** Antes do merge de um grupo, quem integra confere o handoff: refaz os desvios declarados contra a spec e o diff, confere o `Contrato` contra o validador e prova cada teste novo de contrato ou de dado com pelo menos uma mutação própria, numa cópia. O que não confere vira achado na coluna "Handoff conferido". Depois vêm o merge `--no-ff` na branch da feature, só com o CI do grupo verde; a suíte inteira; a transcrição do handoff no "Registro dos grupos", com mutações, conflitos e correções; e a remoção da worktree e da branch do grupo.
+5. **Antes de cada merge** (do grupo na feature e da feature na `main`), quem integra confere que a ponta de cada branch de grupo é a que conferiu; commit novo volta para a conferência.
+6. **Um dono por correção.** Achado da conferência ou da revisão independente é corrigido por um só dono: o grupo autorizado ou quem integra, nunca os dois em paralelo.
 
 Handoff, no corpo do último commit do grupo:
 
 ```
 handoff(Fxx-gN): <resumo>
 
-Feito: …
+Feito: <agente da linha Dono> — …
 Contrato: <formatos definidos ou usados; validador conferido> (ou "não toca contrato")
 Testes: pytest -q (N passados), ruff limpo[, outros comandos]
 Mutações: <teste> ← <mutação> (falhou)

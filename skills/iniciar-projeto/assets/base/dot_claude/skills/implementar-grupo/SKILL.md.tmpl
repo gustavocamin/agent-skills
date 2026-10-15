@@ -30,15 +30,17 @@ Implemente o Grupo N da Fxx conforme a spec aprovada. O `AGENTS.md` é a fonte d
 1. Rode `pytest -q`, `ruff check .` e os demais comandos de "Comandos" do `AGENTS.md` que o grupo tocou.
 2. Releia **Interfaces** e **Requisitos** do `requirements.md` e compare cada item com o diff. Nome de campo, rota, código de saída ou comportamento diferente é desvio: declare-o item por item. "Nenhum" só depois dessa releitura.
 3. Faça push do commit de código da branch do grupo (ou da branch da feature, se você integra e o grupo roda nela) e espere o CI verde, para ter um run verificável.
-4. Escreva a mensagem do handoff (formato abaixo, em português) num arquivo e confira com `python scripts/check_handoff.py --file <arquivo>`. Ela vai no último commit do grupo. Um handoff ruim já enviado se corrige com outro commit `handoff(...)` do mesmo grupo, sem push forçado: vale o último.
+4. Comece o `Feito:` pelo agente da linha `Dono:` do grupo (o CI confere) e copie os números da saída real dos comandos. Escreva a mensagem do handoff (formato abaixo, em português) num arquivo e confira com `python scripts/check_handoff.py --file <arquivo>`. Ela vai no último commit do grupo. Um handoff ruim já enviado se corrige com outro commit `handoff(...)` do mesmo grupo, sem push forçado: vale o último.
 5. Faça push e espere o CI verde também no commit final; informe o run a quem integra. Sem esse resultado, o grupo não está fechado. Se o ambiente impedir o push, diga isso sem inventar evidência.
+
+Depois do handoff, a branch do grupo fica congelada: nada de push sem pedido de quem integra; a correção pedida vem com um handoff novo do mesmo grupo. Correção de achado tem um só dono (o grupo autorizado ou quem integra).
 
 ## Formato do handoff
 
 ```text
 handoff(Fxx-gN): <resumo>
 
-Feito: …
+Feito: <agente da linha Dono> — …
 Contrato: <formatos definidos ou usados; validador conferido> (ou "não toca contrato")
 Testes: …
 Mutações: <teste> ← <mutação> (falhou)
