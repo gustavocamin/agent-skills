@@ -76,3 +76,29 @@ Copiada sem alteração do [anthropics/skills](https://github.com/anthropics/ski
 | Skill | Pasta de origem |
 | --- | --- |
 | `frontend-design` | `skills/frontend-design/` |
+
+## Impeccable
+
+Copiada sem alteração do [pbakaus/impeccable](https://github.com/pbakaus/impeccable), commit
+`8a0e198da34ebc5b936a9d5975fb7a3b1cf353b7` (versão 4.6.0, copiada em 15/10/2026), sob a licença
+Apache-2.0 ([licencas/impeccable-LICENSE](licencas/impeccable-LICENSE) e
+[licencas/impeccable-NOTICE.md](licencas/impeccable-NOTICE.md)). Veio a versão compilada para o
+Codex (`.agents/skills/impeccable/`), porque o frontmatter dela só usa `name`, `description` e
+`metadata` e serve também ao Claude Code; os comandos aparecem como `$impeccable <comando>`, que no
+Claude Code é `/impeccable <comando>`.
+
+- Ficaram de fora, a pedido do Gustavo (15/10/2026, "só a pasta, sem hooks"): os hooks do
+  `npx impeccable install` (SessionStart, PostToolUse e Stop num `settings.json`) e os quatro
+  agentes do Claude Code (`.claude/agents/impeccable-*.md`), que só servem ao `new-work` e ao
+  `live`; o `audit`, o `polish` e o `critique` não dependem deles. Copiar só a pasta não instala
+  hook.
+- No primeiro uso, `scripts/impeccable` baixa um binário das releases do GitHub para
+  `~/.impeccable/bin` e confere o sha256 que vem da mesma release (integridade, não autoria). Sem
+  rede (fase do agente no Codex cloud), a skill segue lendo o contexto direto, como ela prevê.
+- No fluxo spec-first, as skills do ciclo dizem quando ela entra (`polish` ao fechar um grupo de
+  tela, `audit` na validação) e recusam o que ela cria fora do `Toca` (`PRODUCT.md`, `DESIGN.md`,
+  `.impeccable/`): o contexto de produto é o `mission.md`.
+
+| Skill | Pasta de origem |
+| --- | --- |
+| `impeccable` | `.agents/skills/impeccable/` |

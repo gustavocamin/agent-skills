@@ -44,6 +44,15 @@ Mapa do que a skill cria e de como o projeto anda depois. Leia antes de explicar
 4. **Validar** (`validate-feature`, por quem integra): suíte, mutações, mapa R → teste, invariantes, revisão independente numa sessão nova (achados reproduzidos e corrigidos com spec e código juntos), revisão humana preparada com veredito proposto. Fecha só com tudo marcado; commit `feat(Fxx)` e um PR por feature. Depois do merge: CI da `main`, publicação e conferência do artefato implantado, se houver.
 5. **Replanejar** (`replan`): uma rodada de perguntas, mudanças propostas como lista, constituição, `AGENTS.md`, template e testes atualizados juntos, Decisão datada, `start_here.md`, PR `spec(replan)`. Aprendizado geral volta para este kit.
 
+## Telas
+
+As skills de design são pessoais (`gustavocamin/agent-skills`), e o ciclo diz quando cada uma entra; sem elas instaladas, o passo segue sem a skill e o handoff diz isso.
+
+- **Especificar:** a `spec-feature` passa um semáforo pelos itens da entrevista antes de escrever e relê a spec como Produto, Design e Engenharia antes do resumo. Tela nova ganha um grupo de mockups.
+- **Mockups:** o grupo segue a `mockup-telas` (HTML estático e clicável, todos os estados, CSS do app) e para no ok do dono humano; a `frontend-design` dá a direção visual quando o app ainda não tem uma.
+- **Implementar:** o grupo que constrói a tela segue o mockup aprovado e fecha com uma rodada de `impeccable polish` dentro do `Toca`.
+- **Validar:** `impeccable audit` nas telas alteradas, antes do aceite humano; P0 e P1 viram gap.
+
 ## Rituais do dia
 
 - **Começo:** ler o `start_here.md` (próxima ação e o que aguarda o dono humano) e conferir que a `main` e a branch da feature no GitHub estão onde quem integra as deixou.
