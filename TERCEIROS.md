@@ -76,3 +76,58 @@ Copiada sem alteração do [anthropics/skills](https://github.com/anthropics/ski
 | Skill | Pasta de origem |
 | --- | --- |
 | `frontend-design` | `skills/frontend-design/` |
+
+## Impeccable
+
+Copiada sem alteração do [pbakaus/impeccable](https://github.com/pbakaus/impeccable), commit
+`8a0e198da34ebc5b936a9d5975fb7a3b1cf353b7` (versão 4.6.0, copiada em 15/10/2026), sob a licença
+Apache-2.0 ([licencas/impeccable-LICENSE](licencas/impeccable-LICENSE) e
+[licencas/impeccable-NOTICE.md](licencas/impeccable-NOTICE.md)). Veio a versão compilada para o
+Codex (`.agents/skills/impeccable/`), porque o frontmatter dela só usa `name`, `description` e
+`metadata` e serve também ao Claude Code; os comandos aparecem como `$impeccable <comando>`, que no
+Claude Code é `/impeccable <comando>`.
+
+- Ficaram de fora, a pedido do Gustavo (15/10/2026, "só a pasta, sem hooks"): os hooks do
+  `npx impeccable install` (SessionStart, PostToolUse e Stop num `settings.json`) e os quatro
+  agentes do Claude Code (`.claude/agents/impeccable-*.md`), que só servem ao `new-work` e ao
+  `live`; o `audit`, o `polish` e o `critique` não dependem deles. Copiar só a pasta não instala
+  hook.
+- No primeiro uso, `scripts/impeccable` baixa um binário das releases do GitHub para
+  `~/.impeccable/bin` e confere o sha256 que vem da mesma release (integridade, não autoria). Sem
+  rede (fase do agente no Codex cloud), a skill segue lendo o contexto direto, como ela prevê.
+- No fluxo spec-first, as skills do ciclo dizem quando ela entra (`polish` ao fechar um grupo de
+  tela, `audit` na validação) e recusam o que ela cria fora do `Toca` (`PRODUCT.md`, `DESIGN.md`,
+  `.impeccable/`): o contexto de produto é o `mission.md`.
+
+| Skill | Pasta de origem |
+| --- | --- |
+| `impeccable` | `.agents/skills/impeccable/` |
+
+## Playwright CLI
+
+Copiada sem alteração do [microsoft/playwright-cli](https://github.com/microsoft/playwright-cli),
+commit `b85c7a736bb473bf55b584e54a09ffa698d6d871` (copiada em 15/10/2026), sob a licença
+Apache-2.0 ([licencas/playwright-cli-LICENSE](licencas/playwright-cli-LICENSE)). O `SKILL.md` é o
+mesmo que vem no pacote `@playwright/cli` 0.1.22, com que os comandos foram testados em 15/10/2026.
+
+- Precisa do CLI: `npm install -g @playwright/cli@latest`, com o ok do Gustavo.
+- O frontmatter traz `allowed-tools` (`playwright-cli`, `npx playwright`): no Claude Code, esses
+  comandos rodam sem pedir aprovação enquanto a skill está ativa. O Codex ignora o campo. Os fluxos
+  usam a skill só contra servidor local com dados sintéticos, nunca o Site publicado.
+- Na cloud do Claude Code na web, o WebKit não baixa e o `file://` é recusado: a
+  `conferir-no-iphone` diz como abrir com o Chromium da imagem por `http://127.0.0.1`.
+
+| Skill | Pasta de origem |
+| --- | --- |
+| `playwright-cli` | `skills/playwright-cli/` |
+
+## UI Skills
+
+Copiada sem alteração do [ibelick/ui-skills](https://github.com/ibelick/ui-skills), commit
+`fdd6c09dd866354a627ddf3fa46b7b01d421176d` (copiada em 15/10/2026), sob a licença MIT
+([licencas/ui-skills-LICENSE](licencas/ui-skills-LICENSE)). As outras do pacote ficam de fora: a
+`baseline-ui` exige Tailwind e `motion/react`, e a `improve-ui` repete o `polish` da `impeccable`.
+
+| Skill | Pasta de origem |
+| --- | --- |
+| `fixing-accessibility` | `skills/fixing-accessibility/` |
