@@ -226,6 +226,7 @@ Use este arquivo para explicar por que uma regra existe, para adaptar um artefat
 - **Plataforma que desliga sozinha** (o app para em 24 h) pede um `start` antes do deploy ou da conferência (F26). → bloco Databricks.
 - **A plataforma pode reescrever o que você pede**: leia o valor efetivo de volta pela API (F02).
 - **O artefato implantado se confere por GET autenticado** (status, tipo, bytes, SHA-256): um 200 pode ser o fallback do SPA (F33). → bloco Databricks.
+- **Ambiente real que avançou fora do roteiro se registra, não se refaz** (compras-do-ape, F01). A produção foi publicada, migrada e importada sem os grupos ⚠ que o plano previa, e os roteiros pediam passos que já não existiam: a tela de importação some depois da migração. O replan registrou cada fato com a origem (relatado pelo dono, observado pelo agente) e a data, marcou o roteiro antigo como histórico e as caixas como feitas por relato ou dispensadas por decisão do dono, sem declarar prova. O código servido foi conferido pela árvore publicável: o hash da listagem das pastas de produto era igual entre a fonte relatada, o candidato testado no ensaio e a `main`. Ligar a fonte relatada à versão servida ficou como leitura opcional. → `replan`, passo 3.
 
 ## 15. Prazos, escopo e o humano como gargalo
 
