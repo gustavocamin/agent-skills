@@ -217,7 +217,7 @@ def variante(nome: str, respostas: dict, python: str, base: Path, falhas: list[s
     if nome not in COM_MUTACOES:
         return
     # Mutações: os testes do processo precisam pegar um projeto quebrado.
-    roadmap = projeto / "specs" / "constitution" / "roadmap.md"
+    decisoes = projeto / "docs" / "decisoes.md"
     for descricao, alvo, velho, novo in (
         ("grupo sem Toca", feature / "plan.md", " · Toca: `src/contrato.py`", ""),
         (
@@ -246,26 +246,52 @@ def variante(nome: str, respostas: dict, python: str, base: Path, falhas: list[s
             "",
         ),
         (
+            "aceite sem remoto",
+            projeto / "specs/features/_template/plan.md",
+            "**Remoto:**",
+            "**Destino sem contrato:**",
+        ),
+        (
+            "P3 sem feature-alvo",
+            projeto / "docs/backlog-processo.md",
+            "| Feature-alvo |",
+            "| Destino ausente |",
+        ),
+        (
+            "start_here além do teto",
+            projeto / "start_here.md",
+            "## Registro diário",
+            "\n" * 61 + "## Registro diário",
+        ),
+        (
             "Decisão fora de ordem",
-            roadmap,
-            "## Decisões\n",
-            "## Decisões\n\n- 2026-01-01 — antiga — porquê: teste.\n",
+            decisoes,
+            "## Entradas\n",
+            "## Entradas\n\n- 2026-12-01 — futura — motivo: teste.\n",
         ),
     ):
         original = alvo.read_text(encoding="utf-8")
-        alvo.write_text(original.replace(velho, novo, 1), encoding="utf-8")
-        mutado = rodar(
-            python,
-            "-m",
-            "pytest",
-            "-q",
-            "-p",
-            "no:cacheprovider",
-            "tests/test_processo.py",
-            cwd=projeto,
-        )
-        checar(mutado.returncode != 0, f"mutação '{descricao}' derruba o test_processo", falhas)
-        alvo.write_text(original, encoding="utf-8")
+        modo = alvo.stat().st_mode
+        try:
+            # Só a cópia gerada no temporário: o template nasce somente leitura.
+            alvo.chmod(modo | 0o200)
+            alvo.write_text(original.replace(velho, novo, 1), encoding="utf-8")
+            alvo.chmod(modo)
+            mutado = rodar(
+                python,
+                "-m",
+                "pytest",
+                "-q",
+                "-p",
+                "no:cacheprovider",
+                "tests/test_processo.py",
+                cwd=projeto,
+            )
+            checar(mutado.returncode != 0, f"mutação '{descricao}' derruba o test_processo", falhas)
+        finally:
+            alvo.chmod(modo | 0o200)
+            alvo.write_text(original, encoding="utf-8")
+            alvo.chmod(modo)
 
 
 def main() -> int:

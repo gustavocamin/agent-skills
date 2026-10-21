@@ -16,6 +16,18 @@ Roadmap: item Fxx em `specs/constitution/roadmap.md`
 - **Restrições:** <invariantes, limites da plataforma, custo, credenciais, disco>
 - **Arquivos compartilhados:** <arquivo → grupo que o cria ou muda; depois do grupo do contrato, só quem integra mexe neles>
 
+## Autorização de início e pushes
+
+- **Escopo:** <o recorte autorizado; o que fica fora>
+- **Responsáveis:** <integrador e dono de cada grupo, sem alterar a atribuição por inferência>
+- **Remoto:** <nome e URL exatos, conferidos antes do envio>
+- **Branches:** <integração e grupos; quem pode enviar a cada uma>
+- **Comando e opções:** <push normal exato; sem force, main, --all ou --mirror>
+- **Vigência:** do aceite explícito da spec/início até a integração desta feature
+- **Aceite registrado:** <pendente; depois, data, confirmação e link para docs/decisoes.md>
+
+Sem aceite, não há autorização presumida. O aceite não dispensa prompts técnicos nem cobre mudança de escopo/dono/destino/opções, PR/merge/main, publicação/deploy, exclusão, dados, credenciais, permissões ou comando ⚠.
+
 ## Grupos de tarefas
 
 Cada grupo é implementável sozinho e tem um dono (`Dono`), com `Branch` quando roda fora da branch da feature e `Toca` com os caminhos que mexe (protocolo no `AGENTS.md`). Grupos ⚠ tocam {{ALERTA}}: o dono para ao fim deles e mostra o diff. Grupos ⚠ nunca correm em paralelo, e o ⚠ fica só no grupo (ou no passo) que toca o ambiente real. Se um grupo define um contrato que outros consomem, ele vem primeiro, e os paralelos começam depois do push dele.

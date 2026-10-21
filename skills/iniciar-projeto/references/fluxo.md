@@ -17,14 +17,17 @@ Mapa do que a skill cria e de como o projeto anda depois. Leia antes de explicar
 |---|---|---|---|
 | `AGENTS.md` | regras para qualquer agente: fluxo, grupos, handoff, invariantes, comandos | quem integra, por `replan` ou `constitution-interview` | quando uma regra de trabalho muda |
 | `CLAUDE.md` | `@AGENTS.md` + o que é só do Claude Code | idem | raramente |
-| `start_here.md` | próxima ação, o que aguarda o dono humano, estado agora, pendências, registro dos últimos 7 dias | quem integra | ao fim de cada dia de trabalho, no PR em curso |
+| `start_here.md` | próxima ação, o que aguarda o dono humano, estado agora, pendências e resumo recente, até 60 linhas | quem integra | ao fim de cada dia de trabalho, no PR em curso |
 | `specs/constitution/mission.md` | o que, para quem, objetivos, fora de escopo, critério de sucesso | `constitution-interview`, `replan` | F00 e replans |
 | `specs/constitution/tech_stack.md` | stack, desenvolvimento, segredos, política de testes, operação ⚠ | idem | F00 e replans |
-| `specs/constitution/roadmap.md` | calendário, features com "Pronto quando", decisões em aberto, Decisões datadas | idem, mais o status no fechamento de cada feature | F00, replans e fechamentos |
+| `specs/constitution/roadmap.md` | calendário, features com "Pronto quando", decisões em aberto e links para o registro de decisões | idem, mais o status no fechamento de cada feature | F00, replans e fechamentos |
 | `specs/features/_template/` | plan, requirements e validation de partida (somente leitura local) | `replan`, quando uma regra muda o template | raramente |
 | `specs/features/Fxx-nome/plan.md` | objetivo, contexto, grupos com Dono · Branch · Toca, fora do escopo, riscos | `spec-feature`; cada dono marca os próprios checkboxes | durante a feature |
 | `specs/features/Fxx-nome/requirements.md` | R/N, invariantes tocados, Interfaces (corpo de pedido e resposta), perguntas da entrevista | `spec-feature`, depois correções pela conversa | durante a feature |
 | `specs/features/Fxx-nome/validation.md` | checklist automático e humano, mapa R → teste, mutações, Registro dos grupos, revisão, limites, Resultado | dono (o que é do grupo) e quem integra (o resto) | durante e no fechamento |
+| `docs/decisoes.md` | decisões e autorizações, só com acréscimos | quem integra | decisão ou emenda confirmada, com referência e limites |
+| `docs/backlog-processo.md` | P3 com dono, feature-alvo e gatilho | quem integra | ao encaminhar ou retomar um achado |
+| `docs/historico/` | originais versionados com commit de origem e mapa de links | quem integra | antes de enxugar documentos, sem perder pendências |
 | `scripts/check_handoff.py` | conferidor da forma do handoff (`--file`, `--ci`, intervalo) | kit | raramente |
 | `tests/test_processo.py` | trava as regras do fluxo, procura segredos e confere a tabela das regras do Codex | quem muda uma regra testada | junto com a regra |
 | `tests/test_handoff.py` | contrato do conferidor | idem | junto com o conferidor |
@@ -41,8 +44,18 @@ Mapa do que a skill cria e de como o projeto anda depois. Leia antes de explicar
 1. **Especificar** (`spec-feature`): confere se a spec já existe, cria a branch `feature/Fxx-nome`, mapeia o que existe hoje, entrevista, escreve os três arquivos, mostra o resumo com os donos e commita `spec(Fxx): plano, requisitos e validação`. Termina pedindo uma conversa nova.
 2. **Implementar** (`implementar-grupo`, uma conversa por grupo): o dono confere `Dono`, `Integra` e branch; o grupo de contrato vem antes dos paralelos; os ⚠ correm em sequência, com aprovação comando a comando e parada para mostrar o diff. Comando novo que toca ambiente real entra nas regras dos agentes no mesmo grupo. Cada grupo fecha com suíte verde, desvios relidos contra Interfaces e Requisitos, `check_handoff.py --file`, push da branch do grupo, CI verde e o commit `handoff(Fxx-gN)`.
 3. **Integrar** (quem integra, a cada grupo): confere o handoff (desvios refeitos, contrato, mutação própria), faz o merge `--no-ff` com o CI do grupo verde (`merge(Fxx-gN)`), roda a suíte inteira, transcreve no "Registro dos grupos" e remove a worktree e a branch do grupo.
-4. **Validar** (`validate-feature`, por quem integra): suíte, mutações, mapa R → teste, invariantes, revisão independente numa sessão nova (achados reproduzidos e corrigidos com spec e código juntos), revisão humana preparada com veredito proposto. Fecha só com tudo marcado; commit `feat(Fxx)` e um PR por feature. Depois do merge: CI da `main`, publicação e conferência do artefato implantado, se houver.
-5. **Replanejar** (`replan`): uma rodada de perguntas, mudanças propostas como lista, constituição, `AGENTS.md`, template e testes atualizados juntos, Decisão datada, `start_here.md`, PR `spec(replan)`. Aprendizado geral volta para este kit.
+4. **Validar** (`validate-feature`, por quem integra): suíte, mutações, mapa R → teste, invariantes, revisão independente numa sessão nova (P0/P1/P2 corrigidos e conferidos com spec e código; P3 rastreados sem nova rodada completa), revisão humana preparada com veredito proposto. Fecha só com tudo marcado; commit `feat(Fxx)` e um PR por feature. Depois do merge: CI da `main`, publicação e conferência do artefato implantado, se houver.
+5. **Replanejar** (`replan`): uma rodada de perguntas, mudanças propostas como lista, constituição, `AGENTS.md`, template e testes atualizados juntos, decisão acrescentada ao registro canônico, `start_here.md`, PR `spec(replan)`. Aprendizado geral volta para este kit.
+
+## Autorização e fechamento enxutos
+
+O aceite explícito da spec/início cobre pushes ordinários somente dos donos, remoto, branches e opções nomeados até a integração. Sem aceite ou com destino/escopo diferente, a ação dependente para; não há autorização por inferência. PR/merge/main, publicação/deploy, exclusão, dados reais, credenciais, permissões e comandos ⚠ mantêm gates próprios. Prompts técnicos continuam; não se cria allow genérico.
+
+Uma revisão independente final conserva cenários adversariais e mutações. P0/P1/P2 reabrem a correção e sua conferência dirigida; P3 com dono, feature-alvo e gatilho vai para o backlog sem reiniciar a revisão completa. Grupo ⚠ pode exigir revisão extra restrita. Reutilizar CI exige o mesmo SHA, checks e contexto; alteração relevante, falha ou incerteza exige nova prova.
+
+SHA e `git diff --stat` identificam novas entregas. O handoff conserva os campos e o conferidor; uma linha por campo e cerca de 1 KB são metas editoriais. Hashes de produto, publicação, backup e evidência histórica continuam quando necessários.
+
+O kit aplica estas regras em projetos novos. Projetos existentes adotam-nas somente por replan aprovado que preserve regras locais e trabalho manual; atualizar o catálogo não implementa nem autoriza retroativamente mudanças neles.
 
 ## Telas
 

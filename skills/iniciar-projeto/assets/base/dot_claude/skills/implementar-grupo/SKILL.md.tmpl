@@ -11,6 +11,7 @@ Implemente o Grupo N da Fxx conforme a spec aprovada. O `AGENTS.md` é a fonte d
 
 1. Leia `AGENTS.md`, `specs/constitution/` (mission, tech_stack, roadmap) e os três arquivos de `specs/features/Fxx-*/`.
 2. Confira no `plan.md` que o `Dono` do Grupo N é o agente (e o ambiente) desta sessão. Anote a linha `Integra` (sem ela, integra o Claude Code). Confirme a branch: a da feature, ou a `Branch` da linha do dono, criada a partir da branch da feature numa worktree fora do iCloud.
+   Confira também o aceite da spec/início e seus limites: dono, remoto, branch, comando/opções e escopo. Se já cobre o push ordinário pretendido, não peça novo ok de produto por grupo ou SHA. Se não cobre, pare somente a ação dependente e continue o trabalho independente permitido; nunca use a regra proposta para autorizar a si própria.
 3. Se o grupo consome um contrato, leia o validador de quem produz antes de usar o formato. Se define um contrato, escreva o formato de cada pedido e de cada resposta ao lado do código e crie o teste que passa os exemplos de quem consome pelo validador.
 4. Num grupo ⚠, confira conta, login e o estado do ambiente antes do primeiro comando ⚠. Se o recurso que o grupo cria já existe, pare e pergunte.
 
@@ -32,11 +33,11 @@ Implemente o Grupo N da Fxx conforme a spec aprovada. O `AGENTS.md` é a fonte d
 
 ## Fechar o grupo
 
-1. Rode `pytest -q`, `ruff check .` e os demais comandos de "Comandos" do `AGENTS.md` que o grupo tocou.
+1. Confira os resultados de `pytest -q`, `ruff check .` e demais comandos de "Comandos" pertinentes. Reuse prova verde já observada do mesmo SHA/checks/contexto; execute o que falta ou mudou e registre falha ou incerteza, sem declarar sucesso por inferência.
 2. Releia **Interfaces** e **Requisitos** do `requirements.md` e compare cada item com o diff. Nome de campo, rota, código de saída ou comportamento diferente é desvio: declare-o item por item. "Nenhum" só depois dessa releitura.
-3. Faça push do commit de código da branch do grupo (ou da branch da feature, se você integra e o grupo roda nela) e espere o CI verde, para ter um run verificável.
+3. Dentro do aceite de início e sob os prompts técnicos vigentes, faça push normal do commit de código da branch do grupo (ou da branch da feature, se você integra e o grupo roda nela) e espere o CI verde, para ter um run verificável.
 4. Comece o `Feito:` pelo agente da linha `Dono:` do grupo (o CI confere) e copie os números da saída real dos comandos. Escreva a mensagem do handoff (formato abaixo, em português) num arquivo e confira com `python scripts/check_handoff.py --file <arquivo>`. Ela vai no último commit do grupo. Um handoff ruim já enviado se corrige com outro commit `handoff(...)` do mesmo grupo, sem push forçado: vale o último.
-5. Faça push e espere o CI verde também no commit final; informe o run a quem integra. Sem esse resultado, o grupo não está fechado. Se o ambiente impedir o push, diga isso sem inventar evidência.
+5. Faça push normal sob o mesmo aceite e espere o CI verde também no commit final (SHA novo exige prova pertinente); informe o run a quem integra. Sem esse resultado, o grupo não está fechado. Se o ambiente impedir o push, diga isso sem inventar evidência.
 
 Depois do handoff, a branch do grupo fica congelada: nada de push sem pedido de quem integra; a correção pedida vem com um handoff novo do mesmo grupo. Correção de achado tem um só dono (o grupo autorizado ou quem integra).
 
@@ -54,5 +55,7 @@ CI: <run> verde
 Desvios da spec: <diff comparado com Interfaces e Requisitos, item por item> (ou "nenhum")
 Ambiente: local (obrigatório em grupo ⚠; nos demais, local ou cloud, opcional)
 ```
+
+Mantenha os campos e o conferidor existentes. Uma linha por campo e cerca de 1 KB são metas editoriais; detalhes ficam no `validation.md`. A entrega é identificada pelo SHA e `git diff --stat`; não remova provas de domínio ou manifestos já exigidos.
 
 `Mutações` aceita "nenhuma" só com o motivo ("nenhuma, porque o grupo não cria teste de contrato nem de dado"), e `CI` cita o número ou o link de um run verde.
