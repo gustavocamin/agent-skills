@@ -4,7 +4,7 @@ A feature só fecha quando todos os itens abaixo estão marcados, os humanos inc
 
 ## Automática
 
-- [ ] `pytest -q` passa (novos testes: <liste>)
+- [ ] `pytest -q` passa (novos testes: <liste>); citar prova do SHA/checks/contexto atual, reaproveitando run verde válido
 - [ ] `ruff check .` limpo
 - [ ] Cada teste novo de contrato ou de dado tem uma mutação que o faz falhar, registrada em "Mutações"
 - [ ] <teste de integração contra o ambiente real, se aplicável: `pytest -m integration -k ...`, com o run registrado e sem deixar dado de teste para trás>
@@ -19,7 +19,7 @@ A feature só fecha quando todos os itens abaixo estão marcados, os humanos inc
 - [ ] Cada requisito R/N aponta para onde está implementado e testado (mapa abaixo); o que só tem verificação humana está dito
 - [ ] Nada no código que não esteja na spec (ou a spec foi atualizada)
 - [ ] Invariantes do `AGENTS.md` conferidos no diff inteiro por quem integra (escrita fora do permitido, segredos e identificadores pessoais nas linhas adicionadas)
-- [ ] Revisão independente numa sessão nova{{#se codex}} do agente que não integra{{/se}}, com só a constituição, a spec e o diff{{#se codex}} (ou um subagente de quem integra, com o motivo registrado){{/se}}: achados reproduzidos, corrigidos com spec e código juntos e registrados abaixo
+- [ ] Uma revisão independente final do PR para main, numa sessão nova{{#se codex}} do agente que não integra{{/se}}, com só a constituição, a spec e o diff{{#se codex}} (ou um subagente de quem integra, com o motivo registrado){{/se}}: P0/P1/P2 corrigidos e conferidos; P3 encaminhados com dono e feature-alvo, sem rodada completa extra
 
 | Requisito | Implementado em | Testado em |
 |---|---|---|
@@ -43,6 +43,13 @@ Escrito por quem integra (protocolo no `AGENTS.md`). "Handoff conferido": desvio
 ## Revisão independente
 
 <Quem revisou (sessão nova de qual agente, ou subagente e por quê), o commit revisado, os pontos de maior risco pedidos ao revisor e os achados numerados, do mais grave ao menos grave, cada um com o que foi feito.>
+
+## Encaminhamento dos achados
+
+P0/P1/P2 bloqueiam. P3 vai para `docs/backlog-processo.md`, com cenário, evidência/SHA, dono, área, feature-alvo e gatilho; sem dono/alvo, não está encaminhado. Aceite humano pendente ou risco de segurança/dados não vira P3 para fechar.
+
+| Achado / prioridade | Evidência / SHA | Correção conferida ou dono, feature-alvo e gatilho | Estado |
+|---|---|---|---|
 
 ## Limites conhecidos
 

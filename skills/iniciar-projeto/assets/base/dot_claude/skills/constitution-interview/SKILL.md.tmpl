@@ -20,7 +20,7 @@ O produto desta skill é a constituição fechada, não código.
    - granularidade do roadmap: cada feature cabe numa branch e num PR? Divida as grandes;
    - política de testes e o que conta como "pronto" (o padrão já está no `tech_stack.md`).
 4. Aplique as respostas nos três arquivos de forma consistente: decisão de stack que mexe no roadmap atualiza os dois, e decisão que mexe em regra de trabalho atualiza também o `AGENTS.md` (e o `tests/test_processo.py`, se a regra é testada). Tire o [A CONFIRMAR] do que foi decidido e o aviso de "Rascunho semente" quando não sobrar nenhum. Atualize a frase do `README.md`.
-5. Registre cada decisão em "Decisões", no `roadmap.md`: `AAAA-MM-DD — decisão — porquê`.
+5. Acrescente cada decisão a `docs/decisoes.md`, com data, confirmante, referência, motivo e limites. O roadmap mantém só as consequências para calendário/escopo e o link; não duplique a decisão nem apague o histórico.
 6. Mostre o diff resumido e peça correções; correções entram pela conversa, e o agente edita.
 7. Se o repo ainda não está no GitHub, proponha criá-lo privado (`gh repo create <nome> --private --source . --push`, a partir da `main` com o esqueleto), só com o ok explícito de {{DONO}}, e confira o CI do primeiro push.
 8. Rode `pytest -q` e `ruff check .`. Commit `spec(constitution): fecha decisões iniciais` numa branch `spec/constituicao` e PR para a `main`, mesclado com o CI verde e o ok de {{DONO}}.

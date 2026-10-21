@@ -284,3 +284,10 @@ Vale quando o projeto constrói um agente (módulo `agente` do gerador, que leva
 | Teste de interface instável contornado | F02 a F34 | medir e corrigir a causa |
 | Teto de custo fixado antes de medir | F02 | teto como hipótese, vigiado |
 | Heurística como trava principal | F02, F03 | defesa em camadas e lista do permitido |
+
+
+## Fluxo enxuto — manutenção genérica de 21/10/2026
+
+- O aceite de início nomeia donos, remoto, branches, opções e limite até integração; pushes ordinários dentro desse conjunto não pedem novo ok de produto por SHA ou grupo. Prompts técnicos e os gates sensíveis continuam. → AGENTS e templates do ciclo.
+- Uma revisão final por feature mantém adversariais e mutações; P0/P1/P2 bloqueiam, P3 com dono e feature-alvo vira backlog, sem nova rodada completa. CI verde é reutilizável somente no mesmo SHA/checks/contexto. → validate-feature e tech_stack.
+- Estado curto, decisões apenas com acréscimos e histórico recuperável evitam copiar o mesmo fato em vários documentos. Adoção em projeto existente depende de replan; a publicação do kit não altera suas regras. → docs de processo e referências.

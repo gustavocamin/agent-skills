@@ -234,10 +234,10 @@ def test_specs_das_features_seguem_o_template():
         assert re.search(r"(?m)^\| Grupo \|.*\| Handoff conferido \|", validacao), pasta.name
 
 
-def test_decisoes_do_roadmap_datadas_e_a_mais_nova_em_cima():
-    conteudo = _ler("specs/constitution/roadmap.md")
-    secao = conteudo.split("\n## Decisões\n", 1)[1].split("\n## ", 1)[0]
-    assert not re.search(r"(?m)^[*+] ", secao), "Decisões: use '- ' no começo de cada entrada"
+def test_decisoes_datadas_e_acrescentadas_em_ordem_cronologica():
+    conteudo = _ler("docs/decisoes.md")
+    secao = conteudo.split("\n## Entradas\n", 1)[1]
+    assert not re.search(r"(?m)^[*+] ", secao), "Decisões: use '- ' nas entradas"
     entradas = re.findall(r"(?m)^- (.*)$", secao)
     assert entradas, "Decisões sem nenhuma entrada"
     datas = []
@@ -245,7 +245,32 @@ def test_decisoes_do_roadmap_datadas_e_a_mais_nova_em_cima():
         data = re.match(r"(\d{4}-\d{2}-\d{2}) — ", entrada)
         assert data, f"Decisão sem data AAAA-MM-DD no começo: {entrada[:60]}"
         datas.append(date.fromisoformat(data.group(1)))
-    assert datas == sorted(datas, reverse=True), "Decisões fora de ordem: a mais nova vai em cima"
+    assert datas == sorted(datas), "Decisões fora da ordem de acréscimo"
+
+
+def test_documentos_de_processo_tem_links_e_backlog_com_destino():
+    roadmap = _ler("specs/constitution/roadmap.md")
+    assert "../../docs/decisoes.md" in roadmap
+    resumo = roadmap.split("\n## Decisões\n", 1)[1].split("\n## ", 1)[0]
+    assert not re.search(r"(?m)^- \d{4}-\d{2}-\d{2} — ", resumo)
+    for campo in ("Dono", "Feature-alvo", "Gatilho de retomada", "Evidência / SHA", "Estado"):
+        assert f"| {campo} |" in _ler("docs/backlog-processo.md"), campo
+    for caminho in ("docs/decisoes.md", "docs/backlog-processo.md"):
+        assert f"`{caminho}`" in _ler("start_here.md"), caminho
+
+
+def test_template_de_inicio_explica_os_limites_do_aceite():
+    conteudo = _ler("specs/features/_template/plan.md")
+    for campo in (
+        "Escopo",
+        "Responsáveis",
+        "Remoto",
+        "Branches",
+        "Comando e opções",
+        "Vigência",
+        "Aceite registrado",
+    ):
+        assert f"**{campo}:**" in conteudo, campo
 
 
 def test_template_de_validacao_registra_o_handoff_conferido():
@@ -266,7 +291,7 @@ def test_formato_do_handoff_tem_o_assunto_e_os_sete_campos(arquivo):
 def test_start_here_enxuto_e_com_as_secoes():
     # O start_here resume e aponta; sem teto, ele vira um segundo roadmap que envelhece.
     conteudo = _ler("start_here.md")
-    assert len(conteudo.splitlines()) <= 150
+    assert len(conteudo.splitlines()) <= 60
     for secao in (
         "## Próxima ação",
         "## Aguardando",
