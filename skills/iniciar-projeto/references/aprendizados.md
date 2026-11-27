@@ -291,3 +291,10 @@ Vale quando o projeto constrói um agente (módulo `agente` do gerador, que leva
 - O aceite de início nomeia donos, remoto, branches, opções e limite até integração; pushes ordinários dentro desse conjunto não pedem novo ok de produto por SHA ou grupo. Prompts técnicos e os gates sensíveis continuam. → AGENTS e templates do ciclo.
 - Uma revisão final por feature mantém adversariais e mutações; P0/P1/P2 bloqueiam, P3 com dono e feature-alvo vira backlog, sem nova rodada completa. CI verde é reutilizável somente no mesmo SHA/checks/contexto. → validate-feature e tech_stack.
 - Estado curto, decisões apenas com acréscimos e histórico recuperável evitam copiar o mesmo fato em vários documentos. Adoção em projeto existente depende de replan; a publicação do kit não altera suas regras. → docs de processo e referências.
+
+## Verificação autônoma — manutenção genérica de 27/11/2026
+
+- Ferramenta instalada só no CI (navegador de teste, por exemplo) entra por lockfile versionado fora da fonte publicada, com versão exata e integridade conferida; nada de `npm install pacote@versão` no passo. → template do CI.
+- O revisor independente tenta mutações dos testes novos e devolve as que sobrevivem; quem integra as refaz numa cópia depois de corrigir. Os testes de "só lê fixtures" seguem os imports em cadeia. → validate-feature.
+- Um P3 cujo gatilho é um grupo entra no `Toca` desse grupo, ou quem integra o resolve antes de o grupo começar; senão o gatilho passa sem retomada. → AGENTS e plan.
+- Quando a ferramenta do agente trava num passo dele, a pessoa pode operar na hora, com a aprovação que o passo já pedia, e o dono registra a troca logo depois; comando sensível sem aprovação continua fora. → AGENTS (Protocolo).
